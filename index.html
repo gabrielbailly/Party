@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Master de Grupo - El Juego de Mesa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@700;900&family=Poppins:wght@300;400;600;800&display=swap');
+
+        :root {
+            --bg-dark: #0f172a;
+            --panel-bg: rgba(30, 41, 59, 0.95);
+            --accent: #3b82f6;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--bg-dark);
+            color: #f8fafc;
+            min-height: 100vh;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        .serif { font-family: 'Crimson Pro', serif; }
+
+        .screen { display: none; min-height: 100vh; padding: 2rem; }
+        .screen.active { display: flex; flex-direction: column; align-items: center; }
+
+        .glass-card {
+            background: var(--panel-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 28px;
+            width: 100%;
+            max-width: 800px;
+            padding: 2.5rem;
+        }
+
+        #wheel-container {
+            position: relative;
+            width: clamp(280px, 70vw, 400px);
+            height: clamp(280px, 70vw, 400px);
+            margin: 0 auto;
+        }
+
+        canvas#wheel {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 8px solid #334155;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            transition: transform 5s cubic-bezier(0.1, 0, 0.1, 1);
+        }
+
+        .btn-answer {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1.2rem;
+            border-radius: 16px;
+            transition: all 0.2s;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .btn-answer:hover:not(:disabled) {
+            background: rgba(59, 130, 246, 0.25);
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        #timer-display {
+            background: rgba(59, 130, 246, 0.1);
+            border: 2px solid var(--accent);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- CONFIGURACIÓN -->
+    <section id="screen-config" class="screen active justify-center">
+        <div class="glass-card">
+            <h1 class="serif text-5xl mb-2 text-blue-400 font-black text-center">Master de Grupo</h1>
+            <p class="text-slate-400 text-center text-sm mb-8">Cultura general, retos y vuestras propias historias.</p>
+            
+            <div class="space-y-6">
+                <div>
+                    <label class="block text-xs font-black uppercase text-slate-500 mb-3 tracking-widest text-center">Nivel de Dificultad</label>
+                    <div class="grid grid-cols-3 gap-3">
+                        <button onclick="setAge(40, this)" class="age-btn border border-slate-700 py-3 rounded-xl text-white">Junior</button>
+                        <button onclick="setAge(60, this)" class="age-btn border-2 border-blue-500 bg-blue-500/10 py-3 rounded-xl text-white font-bold">Senior</button>
+                        <button onclick="setAge(80, this)" class="age-btn border border-slate-700 py-3 rounded-xl text-white">Máster</button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-black uppercase text-slate-500 mb-2">Participantes y sus anécdotas</label>
+                    <p class="text-[10px] text-slate-500 mb-2">Formato: Nombre (enter) Descripción con frases separadas por puntos.</p>
+                    <textarea id="config-text" class="w-full h-40 bg-slate-900 border border-slate-700 p-4 rounded-xl text-white font-mono text-xs focus:border-blue-500 outline-none" 
+placeholder="Marta
+Le encanta viajar a Japón. Habla tres idiomas.
+Luis
+Es un experto cocinando paellas. Toca la batería."></textarea>
+                </div>
+            </div>
+
+            <button id="start-game-btn" class="w-full mt-8 bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-xl text-lg shadow-xl transition-all">
+                EMPEZAR JUEGO
+            </button>
+        </div>
+    </section>
+
+    <!-- JUEGO -->
+    <section id="screen-game" class="screen">
+        <div class="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-8 w-full max-w-6xl">
+            <main class="flex flex-col items-center space-y-8">
+                <h2 class="serif text-3xl text-white opacity-80 italic">Master de Grupo</h2>
+
+                <div id="wheel-view" class="w-full flex flex-col items-center space-y-10">
+                    <div id="wheel-container">
+                        <div class="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-12 bg-rose-500 z-10 shadow-lg" style="clip-path: polygon(50% 100%, 0 0, 100% 0);"></div>
+                        <canvas id="wheel" width="800" height="800"></canvas>
+                    </div>
+                    <button id="spin-btn" class="bg-blue-600 hover:bg-blue-500 text-white px-16 py-5 rounded-2xl text-2xl font-black shadow-2xl transition-all active:scale-95">
+                        GIRAR RULETA
+                    </button>
+                </div>
+
+                <div id="challenge-view" class="glass-card w-full hidden max-w-2xl border-blue-500/30">
+                    <div class="flex justify-between items-center mb-8">
+                        <span id="cat-label" class="text-xs font-black uppercase tracking-widest px-4 py-1 rounded-full border border-blue-500/40 text-blue-400 bg-blue-500/5"></span>
+                        <div id="timer-display">20</div>
+                    </div>
+                    <h3 id="question-text" class="text-2xl font-bold mb-10 text-center leading-relaxed text-white"></h3>
+                    <div id="options-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+                    <div id="feedback-area" class="hidden mt-10 text-center">
+                        <p id="feedback-msg" class="serif text-4xl font-bold mb-3"></p>
+                        <p id="correct-ans-text" class="text-emerald-400 text-base mb-8 italic"></p>
+                        <button id="next-btn" class="bg-white text-slate-900 font-black px-10 py-4 rounded-xl shadow-lg hover:bg-slate-200 transition-all">SIGUIENTE TURNO</button>
+                    </div>
+                </div>
+            </main>
+
+            <aside class="glass-card h-fit space-y-6">
+                <h3 class="serif text-2xl text-blue-300 border-b border-white/10 pb-4 text-center">Participantes</h3>
+                <div id="scoreboard" class="space-y-3"></div>
+                <div class="pt-6 mt-4 border-t border-white/10">
+                    <p class="text-[10px] uppercase text-slate-500 font-black tracking-widest mb-1">Turno actual:</p>
+                    <p id="active-player-name" class="text-xl font-bold text-white truncate">---</p>
+                </div>
+            </aside>
+        </div>
+    </section>
+
+    <script>
+        // --- AUDIO ENGINE ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            const now = audioCtx.currentTime;
+            if (type === 'click') {
+                osc.type = 'sine'; osc.frequency.setValueAtTime(200, now);
+                gain.gain.setValueAtTime(0.05, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                osc.start(); osc.stop(now + 0.05);
+            } else if (type === 'success') {
+                osc.type = 'triangle'; osc.frequency.setValueAtTime(440, now);
+                osc.frequency.exponentialRampToValueAtTime(880, now + 0.2);
+                gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.start(); osc.stop(now + 0.3);
+            } else if (type === 'error') {
+                osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, now);
+                gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
+                osc.start(); osc.stop(now + 0.2);
+            }
+        }
+
+        // --- PREGUNTAS CULTURA GENERAL ---
+        const generalQuestions = {
+            letras: [
+                { q: "¿En qué país nació William Shakespeare?", a: ["Escocia", "Gales", "Inglaterra", "Irlanda"], c: 2, id: "g1" },
+                { q: "¿Quién escribió 'Don Quijote de la Mancha'?", a: ["Lorca", "Cervantes", "Quevedo", "Lope de Vega"], c: 1, id: "g2" },
+                { q: "¿Cuál es el río más largo del mundo?", a: ["Amazonas", "Nilo", "Mississippi", "Danubio"], c: 0, id: "g3" },
+                { q: "¿En qué continente está el desierto del Sahara?", a: ["Asia", "América", "África", "Oceanía"], c: 2, id: "g4" }
+            ],
+            logica: [
+                { q: "Si tengo 3 manzanas y me quitas 2, ¿cuántas tienes tú?", a: ["1", "2", "3", "0"], c: 1, id: "l1" },
+                { q: "¿Qué pesa más, un kilo de plomo o un kilo de paja?", a: ["Plomo", "Paja", "Pesan igual", "Depende"], c: 2, id: "l2" },
+                { q: "Padre de Juan tiene 3 hijos: Pim, Pam y...", a: ["Pum", "Juan", "Pon", "Pan"], c: 1, id: "l3" }
+            ]
+        };
+
+        // --- ESTADO ---
+        let players = [];
+        let scores = {};
+        let currentIdx = 0;
+        let usedQuestions = new Set();
+        let usedBioFacts = new Set();
+        let isSpinning = false;
+        let timerId;
+        let currentChallenge = null;
+        let selectedLevel = 60;
+
+        const categories = [
+            { id: "letras", name: "Letras", color: "#1e40af" },
+            { id: "logica", name: "Lógica", color: "#065f46" },
+            { id: "biografia", name: "Biografía", color: "#9f1239" },
+            { id: "letras2", name: "Letras", color: "#1e40af" },
+            { id: "logica2", name: "Lógica", color: "#065f46" },
+            { id: "biografia2", name: "Biografía", color: "#9f1239" }
+        ];
+
+        window.setAge = (val, btn) => {
+            selectedLevel = val;
+            document.querySelectorAll('.age-btn').forEach(b => b.className = "age-btn border border-slate-700 py-3 rounded-xl text-white");
+            btn.className = "age-btn border-2 border-blue-500 bg-blue-500/10 py-3 rounded-xl text-white font-bold";
+            playSound('click');
+        };
+
+        document.getElementById('start-game-btn').onclick = () => {
+            const lines = document.getElementById('config-text').value.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            players = [];
+            for (let i = 0; i < lines.length; i += 2) {
+                if (lines[i] && lines[i+1]) {
+                    const facts = lines[i+1].split(/[.!?]/).map(f => f.trim()).filter(f => f.length > 3);
+                    players.push({ id: players.length, nombre: lines[i], facts: facts });
+                }
+            }
+            if (players.length < 2) return alert("Introduce al menos 2 participantes.");
+            players.forEach(p => scores[p.nombre] = 0);
+            document.getElementById('screen-config').classList.remove('active');
+            document.getElementById('screen-game').classList.add('active');
+            updateScoreboard();
+            drawWheel();
+        };
+
+        function drawWheel() {
+            const canvas = document.getElementById('wheel'), ctx = canvas.getContext('2d');
+            const w = canvas.width, center = w / 2, radius = center - 20, slice = (Math.PI * 2) / categories.length;
+            ctx.clearRect(0,0,w,w);
+            categories.forEach((cat, i) => {
+                ctx.beginPath(); ctx.fillStyle = cat.color; ctx.moveTo(center, center);
+                ctx.arc(center, center, radius, i * slice, (i + 1) * slice); ctx.fill();
+                ctx.save(); ctx.translate(center, center); ctx.rotate(i * slice + slice / 2);
+                ctx.fillStyle = "white"; ctx.font = "bold 32px Poppins"; ctx.textAlign = "right";
+                ctx.fillText(cat.name.toUpperCase(), radius - 40, 10); ctx.restore();
+            });
+        }
+
+        document.getElementById('spin-btn').onclick = () => {
+            if (isSpinning) return;
+            isSpinning = true;
+            const canvas = document.getElementById('wheel');
+            const rotation = 3600 + Math.random() * 360;
+            canvas.style.transform = `rotate(${rotation}deg)`;
+            let clickCount = 0;
+            const clickInt = setInterval(() => { if(clickCount < 30) { playSound('click'); clickCount++; } else clearInterval(clickInt); }, 150);
+            setTimeout(() => {
+                isSpinning = false;
+                const deg = rotation % 360;
+                const idx = Math.floor(((360 - deg + 270) % 360) / (360 / categories.length)) % categories.length;
+                showChallenge(categories[idx]);
+            }, 5000);
+        };
+
+        function showChallenge(cat) {
+            document.getElementById('wheel-view').classList.add('hidden');
+            document.getElementById('challenge-view').classList.remove('hidden');
+            document.getElementById('feedback-area').classList.add('hidden');
+            document.getElementById('options-grid').innerHTML = "";
+            document.getElementById('cat-label').textContent = cat.name;
+
+            const baseCatId = cat.id.replace(/\d+/g, ''); // Para manejar 'letras' y 'letras2' igual
+
+            if (baseCatId === "biografia") {
+                const challenge = getUniqueBioChallenge();
+                document.getElementById('question-text').textContent = challenge.text;
+                currentChallenge = { a: players.map(p => p.nombre), c: challenge.playerId };
+                players.forEach(p => renderBtn(p.nombre, p.id === challenge.playerId));
+            } else {
+                // Cultura general sin mencionar participantes
+                const pool = generalQuestions[baseCatId];
+                const available = pool.filter(q => !usedQuestions.has(q.id));
+                const selected = available.length > 0 ? available[Math.floor(Math.random() * available.length)] : pool[0];
+                usedQuestions.add(selected.id);
+                currentChallenge = selected;
+                document.getElementById('question-text').textContent = selected.q;
+                selected.a.forEach((t, i) => renderBtn(t, i === selected.c));
+            }
+            startTimer();
+        }
+
+        function getUniqueBioChallenge() {
+            let available = [];
+            players.forEach(p => {
+                p.facts.forEach(f => {
+                    if (!usedBioFacts.has(`${p.id}-${f}`)) available.push({ p, f });
+                });
+            });
+            if (available.length === 0) { usedBioFacts.clear(); return getUniqueBioChallenge(); }
+            const chosen = available[Math.floor(Math.random() * available.length)];
+            usedBioFacts.add(`${chosen.p.id}-${chosen.f}`);
+            const intros = ["¿Quién...", "¿A quién nos referimos con...", "¿Qué participante...", "¿A quién describe esto:"];
+            return {
+                text: `${intros[Math.floor(Math.random() * intros.length)]} "${chosen.f.substring(0, 50)}..."?`,
+                playerId: chosen.p.id
+            };
+        }
+
+        function renderBtn(text, isCorrect) {
+            const btn = document.createElement('button');
+            btn.className = "btn-answer"; btn.textContent = text;
+            btn.onclick = () => resolve(isCorrect);
+            document.getElementById('options-grid').appendChild(btn);
+        }
+
+        function startTimer() {
+            let left = 20; const display = document.getElementById('timer-display');
+            display.textContent = left; clearInterval(timerId);
+            timerId = setInterval(() => { left--; display.textContent = left; if (left <= 0) resolve(false, "¡TIEMPO!"); }, 1000);
+        }
+
+        function resolve(correct, msg) {
+            clearInterval(timerId);
+            document.querySelectorAll('.btn-answer').forEach(b => b.disabled = true);
+            const feedback = document.getElementById('feedback-area');
+            feedback.classList.remove('hidden');
+            if (correct) {
+                playSound('success');
+                document.getElementById('feedback-msg').textContent = msg || "¡CORRECTO!";
+                document.getElementById('feedback-msg').className = "serif text-4xl font-bold text-blue-400";
+                scores[players[currentIdx].nombre] += 10;
+            } else {
+                playSound('error');
+                document.getElementById('feedback-msg').textContent = msg || "¡OH NO!";
+                document.getElementById('feedback-msg').className = "serif text-4xl font-bold text-rose-500";
+                if (currentChallenge) document.getElementById('correct-ans-text').textContent = `Correcto: ${currentChallenge.a[currentChallenge.c]}`;
+            }
+            updateScoreboard();
+        }
+
+        function updateScoreboard() {
+            document.getElementById('scoreboard').innerHTML = players.map((p, i) => `
+                <div class="flex justify-between items-center p-3 rounded-xl ${i === currentIdx ? 'bg-blue-600/30 border border-blue-500/50' : 'bg-white/5'}">
+                    <span class="font-bold truncate max-w-[150px]">${p.nombre}</span>
+                    <span class="bg-blue-600 px-2 py-1 rounded text-xs font-black">${scores[p.nombre]}</span>
+                </div>
+            `).join('');
+            document.getElementById('active-player-name').textContent = players[currentIdx].nombre;
+        }
+
+        document.getElementById('next-btn').onclick = () => {
+            currentIdx = (currentIdx + 1) % players.length;
+            document.getElementById('challenge-view').classList.add('hidden');
+            document.getElementById('wheel-view').classList.remove('hidden');
+            document.getElementById('wheel').style.transform = "rotate(0deg)";
+            document.getElementById('correct-ans-text').textContent = "";
+            playSound('click'); updateScoreboard();
+        };
+    </script>
+</body>
+</html>
+
