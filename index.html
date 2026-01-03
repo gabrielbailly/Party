@@ -3,45 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Master de Grupo - El Juego de Mesa</title>
+    <title>La Ruleta Mágica de Reyes</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@700;900&family=Poppins:wght@300;400;600;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Poppins:wght@300;400;600&display=swap');
 
         :root {
-            --bg-dark: #0f172a;
-            --panel-bg: rgba(30, 41, 59, 0.95);
-            --accent: #3b82f6;
+            --royal-blue: #0f172a;
+            --gold: #fbbf24;
+            --crimson: #991b1b;
         }
 
         body {
             font-family: 'Poppins', sans-serif;
-            background: var(--bg-dark);
+            background: radial-gradient(circle at center, #1e293b 0%, #070a13 100%);
             color: #f8fafc;
             min-height: 100vh;
             margin: 0;
             overflow-x: hidden;
         }
 
-        .serif { font-family: 'Crimson Pro', serif; }
+        .serif-royal { font-family: 'Cinzel', serif; }
 
-        .screen { display: none; min-height: 100vh; padding: 2rem; }
+        /* Efecto Nieve */
+        #snow {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .screen { display: none; min-height: 100vh; padding: 2rem; position: relative; z-index: 1; }
         .screen.active { display: flex; flex-direction: column; align-items: center; }
 
         .glass-card {
-            background: var(--panel-bg);
+            background: rgba(15, 23, 42, 0.85);
             backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 28px;
+            border: 2px solid var(--gold);
+            border-radius: 40px;
             width: 100%;
-            max-width: 800px;
+            max-width: 900px;
             padding: 2.5rem;
+            box-shadow: 0 0 50px rgba(251, 191, 36, 0.2);
         }
 
         #wheel-container {
             position: relative;
-            width: clamp(280px, 70vw, 400px);
-            height: clamp(280px, 70vw, 400px);
+            width: clamp(280px, 70vw, 420px);
+            height: clamp(280px, 70vw, 420px);
             margin: 0 auto;
         }
 
@@ -49,211 +58,383 @@
             width: 100%;
             height: 100%;
             border-radius: 50%;
-            border: 8px solid #334155;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            border: 12px solid var(--gold);
+            box-shadow: 0 0 60px rgba(251, 191, 36, 0.4);
             transition: transform 5s cubic-bezier(0.1, 0, 0.1, 1);
         }
 
         .btn-answer {
             background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--gold);
             padding: 1.2rem;
-            border-radius: 16px;
-            transition: all 0.2s;
+            border-radius: 20px;
+            transition: all 0.3s;
             text-align: center;
-            font-weight: 500;
         }
 
         .btn-answer:hover:not(:disabled) {
-            background: rgba(59, 130, 246, 0.25);
-            border-color: var(--accent);
-            transform: translateY(-2px);
+            background: rgba(251, 191, 36, 0.2);
+            transform: translateY(-3px);
         }
 
-        #timer-display {
-            background: rgba(59, 130, 246, 0.1);
-            border: 2px solid var(--accent);
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 800;
+        .participant-tag.selected {
+            background: var(--gold);
+            color: var(--royal-blue);
+            font-weight: bold;
         }
+
+        .crown-icon {
+            filter: drop-shadow(0 0 5px var(--gold));
+        }
+
+        #music-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--gold);
+            color: var(--royal-blue);
+            width: 55px; height: 55px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            font-size: 1.5rem;
+            transition: transform 0.2s;
+        }
+        #music-toggle:active { transform: scale(0.9); }
+
+        .loader {
+            border: 4px solid rgba(251, 191, 36, 0.1);
+            border-left-color: var(--gold);
+            border-radius: 50%;
+            width: 40px; height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
+    <canvas id="snow"></canvas>
+
+    <div id="music-toggle" onclick="toggleMusic()">
+        <span id="music-icon">🔇</span>
+    </div>
+
     <!-- CONFIGURACIÓN -->
     <section id="screen-config" class="screen active justify-center">
-        <div class="glass-card">
-            <h1 class="serif text-5xl mb-2 text-blue-400 font-black text-center">Master de Grupo</h1>
-            <p class="text-slate-400 text-center text-sm mb-8">Cultura general, retos y vuestras propias historias.</p>
+        <div class="glass-card text-center">
+            <div class="flex justify-center mb-4">
+                <span class="text-6xl crown-icon">👑</span>
+            </div>
+            <h1 class="serif-royal text-6xl mb-2 text-yellow-400 font-black">La Ruleta Mágica</h1>
+            <p class="text-indigo-200 text-sm mb-8 tracking-widest uppercase">Especial Día de Reyes</p>
             
-            <div class="space-y-6">
+            <div class="space-y-6 text-left">
                 <div>
-                    <label class="block text-xs font-black uppercase text-slate-500 mb-3 tracking-widest text-center">Nivel de Dificultad</label>
+                    <label class="block text-xs font-black uppercase text-yellow-500/70 mb-4 tracking-widest text-center">Dificultad de los Sabios</label>
                     <div class="grid grid-cols-3 gap-3">
-                        <button onclick="setAge(40, this)" class="age-btn border border-slate-700 py-3 rounded-xl text-white">Junior</button>
-                        <button onclick="setAge(60, this)" class="age-btn border-2 border-blue-500 bg-blue-500/10 py-3 rounded-xl text-white font-bold">Senior</button>
-                        <button onclick="setAge(80, this)" class="age-btn border border-slate-700 py-3 rounded-xl text-white">Máster</button>
+                        <button onclick="setDifficulty('junior', this)" class="diff-btn border border-slate-700 py-3 rounded-xl text-white">Paje</button>
+                        <button onclick="setDifficulty('senior', this)" class="diff-btn border-2 border-yellow-500 bg-yellow-500/10 py-3 rounded-xl text-white font-bold">Caballero</button>
+                        <button onclick="setDifficulty('master', this)" class="diff-btn border border-slate-700 py-3 rounded-xl text-white">Rey Mago</button>
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-xs font-black uppercase text-slate-500 mb-2">Participantes y sus anécdotas</label>
-                    <p class="text-[10px] text-slate-500 mb-2">Formato: Nombre (enter) Descripción con frases separadas por puntos.</p>
-                    <textarea id="config-text" class="w-full h-40 bg-slate-900 border border-slate-700 p-4 rounded-xl text-white font-mono text-xs focus:border-blue-500 outline-none" 
-placeholder="Marta
-Le encanta viajar a Japón. Habla tres idiomas.
-Luis
-Es un experto cocinando paellas. Toca la batería."></textarea>
+                    <label class="block text-xs font-black uppercase text-yellow-500/70 mb-2">Libro de los Participantes</label>
+                    <p class="text-[10px] text-slate-400 mb-2">Escribe el nombre y una curiosidad debajo.</p>
+                    <textarea id="config-text" class="w-full h-32 bg-slate-900 border border-yellow-900 p-4 rounded-xl text-white font-mono text-xs focus:border-yellow-500 outline-none" 
+placeholder="Melchor
+Le encanta el oro. Viaja siempre en camello.
+Gaspar
+Es experto en astronomía. Prefiere el incienso."></textarea>
+                </div>
+
+                <div id="participant-selection-area" class="hidden">
+                    <label class="block text-xs font-black uppercase text-yellow-500/70 mb-3 tracking-widest">Participantes en "El Enigma":</label>
+                    <div id="participant-chips" class="flex flex-wrap gap-2"></div>
                 </div>
             </div>
 
-            <button id="start-game-btn" class="w-full mt-8 bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-xl text-lg shadow-xl transition-all">
-                EMPEZAR JUEGO
+            <button id="start-game-btn" class="w-full mt-8 bg-gradient-to-r from-yellow-600 to-yellow-400 hover:from-yellow-500 hover:to-yellow-300 text-slate-900 font-black py-4 rounded-2xl text-xl shadow-[0_0_30px_rgba(251,191,36,0.3)] transition-all transform hover:scale-105">
+                ¡QUE COMIENCE LA MAGIA!
             </button>
         </div>
     </section>
 
     <!-- JUEGO -->
     <section id="screen-game" class="screen">
-        <div class="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-8 w-full max-w-6xl">
-            <main class="flex flex-col items-center space-y-8">
-                <h2 class="serif text-3xl text-white opacity-80 italic">Master de Grupo</h2>
+        <div class="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8 w-full max-w-7xl">
+            <main class="flex flex-col items-center space-y-6">
+                <div class="flex justify-between w-full items-center bg-black/20 p-4 rounded-2xl border border-yellow-500/20">
+                    <h2 class="serif-royal text-2xl text-yellow-500">La Ruleta Mágica</h2>
+                    <button id="end-game-btn" class="bg-red-900/40 hover:bg-red-700 text-red-200 px-4 py-2 rounded-lg text-xs font-bold transition-all border border-red-500/30">TERMINAR FESTEJO</button>
+                </div>
 
-                <div id="wheel-view" class="w-full flex flex-col items-center space-y-10">
+                <div id="wheel-view" class="w-full flex flex-col items-center space-y-8">
                     <div id="wheel-container">
-                        <div class="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-12 bg-rose-500 z-10 shadow-lg" style="clip-path: polygon(50% 100%, 0 0, 100% 0);"></div>
+                        <div class="absolute -top-8 left-1/2 -translate-x-1/2 text-5xl z-10 animate-pulse">⭐️</div>
                         <canvas id="wheel" width="800" height="800"></canvas>
                     </div>
-                    <button id="spin-btn" class="bg-blue-600 hover:bg-blue-500 text-white px-16 py-5 rounded-2xl text-2xl font-black shadow-2xl transition-all active:scale-95">
-                        GIRAR RULETA
+                    <button id="spin-btn" class="bg-gradient-to-b from-yellow-400 to-yellow-600 text-slate-900 px-20 py-5 rounded-3xl text-3xl font-black shadow-2xl transition-all active:scale-95 border-b-4 border-yellow-800">
+                        GIRAR DESTINO
                     </button>
                 </div>
 
-                <div id="challenge-view" class="glass-card w-full hidden max-w-2xl border-blue-500/30">
-                    <div class="flex justify-between items-center mb-8">
-                        <span id="cat-label" class="text-xs font-black uppercase tracking-widest px-4 py-1 rounded-full border border-blue-500/40 text-blue-400 bg-blue-500/5"></span>
-                        <div id="timer-display">20</div>
+                <!-- VISTA DE DESAFÍO -->
+                <div id="challenge-view" class="glass-card w-full hidden max-w-2xl">
+                    <div class="flex justify-between items-center mb-6">
+                        <span id="cat-label" class="text-xs font-black uppercase tracking-widest px-4 py-1 rounded-full border border-yellow-500/40 text-yellow-500"></span>
+                        <div id="timer-display" class="border-2 border-yellow-500 text-yellow-500 rounded-full w-12 h-12 flex items-center justify-center font-bold">20</div>
                     </div>
-                    <h3 id="question-text" class="text-2xl font-bold mb-10 text-center leading-relaxed text-white"></h3>
+                    
+                    <div id="ai-image-container" class="hidden mb-6 flex flex-col items-center">
+                        <div id="ai-loader" class="flex flex-col items-center p-8 space-y-4">
+                            <div class="loader"></div>
+                            <p class="text-xs text-yellow-500 animate-pulse italic">Invocando visiones reales...</p>
+                        </div>
+                        <img id="ai-img" class="hidden w-72 h-72 rounded-3xl object-cover shadow-2xl border-4 border-yellow-500/50" src="" alt="Enigma Real">
+                    </div>
+
+                    <h3 id="question-text" class="text-2xl font-bold mb-8 text-center leading-relaxed"></h3>
                     <div id="options-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+
                     <div id="feedback-area" class="hidden mt-10 text-center">
-                        <p id="feedback-msg" class="serif text-4xl font-bold mb-3"></p>
-                        <p id="correct-ans-text" class="text-emerald-400 text-base mb-8 italic"></p>
-                        <button id="next-btn" class="bg-white text-slate-900 font-black px-10 py-4 rounded-xl shadow-lg hover:bg-slate-200 transition-all">SIGUIENTE TURNO</button>
+                        <p id="feedback-msg" class="serif-royal text-4xl font-bold mb-2"></p>
+                        <p id="correct-ans-text" class="text-yellow-400 text-base mb-8 italic"></p>
+                        <button id="next-btn" class="bg-yellow-500 text-slate-900 font-black px-12 py-4 rounded-2xl shadow-xl hover:bg-yellow-400">SIGUIENTE TURNO</button>
                     </div>
                 </div>
             </main>
 
-            <aside class="glass-card h-fit space-y-6">
-                <h3 class="serif text-2xl text-blue-300 border-b border-white/10 pb-4 text-center">Participantes</h3>
+            <!-- LATERAL -->
+            <aside class="glass-card h-fit space-y-6 !border-yellow-900/50">
+                <h3 class="serif-royal text-2xl text-yellow-500 border-b border-yellow-500/20 pb-4 text-center">Ofrendas (Puntos)</h3>
                 <div id="scoreboard" class="space-y-3"></div>
-                <div class="pt-6 mt-4 border-t border-white/10">
-                    <p class="text-[10px] uppercase text-slate-500 font-black tracking-widest mb-1">Turno actual:</p>
-                    <p id="active-player-name" class="text-xl font-bold text-white truncate">---</p>
+                <div class="pt-6 mt-4 border-t border-yellow-500/20">
+                    <p class="text-[10px] uppercase text-slate-500 font-black mb-1">Bajo la estrella:</p>
+                    <div class="flex items-center gap-2">
+                        <span>✨</span>
+                        <p id="active-player-name" class="text-xl font-bold text-yellow-200 truncate">---</p>
+                    </div>
                 </div>
             </aside>
         </div>
     </section>
 
+    <!-- PODIO FINAL -->
+    <section id="screen-podium" class="screen justify-center">
+        <div class="glass-card text-center max-w-lg">
+            <h2 class="serif-royal text-5xl text-yellow-400 font-black mb-8">El Banquete Real</h2>
+            <div id="podium-list" class="space-y-4 mb-10"></div>
+            <button onclick="location.reload()" class="bg-yellow-600 px-10 py-4 rounded-xl font-bold text-white">NUEVA PARTIDA</button>
+        </div>
+    </section>
+
     <script>
-        // --- AUDIO ENGINE ---
+        const apiKey = "";
+        
+        // --- MOTOR DE AUDIO AVANZADO ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        function playSound(type) {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
+        let isMusicPlaying = false;
+        let melodyTimeout;
+
+        // Versión extendida de We Wish You A Merry Christmas
+        const melody = [
+            {f: 261, d: 0.4}, {f: 349, d: 0.4}, {f: 349, d: 0.2}, {f: 392, d: 0.2}, {f: 349, d: 0.2}, {f: 329, d: 0.2}, {f: 293, d: 0.4}, {f: 293, d: 0.4},
+            {f: 293, d: 0.4}, {f: 392, d: 0.4}, {f: 392, d: 0.2}, {f: 440, d: 0.2}, {f: 392, d: 0.2}, {f: 349, d: 0.2}, {f: 329, d: 0.4}, {f: 261, d: 0.4},
+            {f: 261, d: 0.4}, {f: 440, d: 0.4}, {f: 440, d: 0.2}, {f: 466, d: 0.2}, {f: 440, d: 0.2}, {f: 392, d: 0.2}, {f: 349, d: 0.4}, {f: 293, d: 0.4},
+            {f: 261, d: 0.2}, {f: 261, d: 0.2}, {f: 293, d: 0.4}, {f: 392, d: 0.4}, {f: 329, d: 0.4}, {f: 349, d: 0.8}
+        ];
+
+        function playTone(freq, dur, type = 'sine', vol = 0.1) {
             const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain); gain.connect(audioCtx.destination);
-            const now = audioCtx.currentTime;
-            if (type === 'click') {
-                osc.type = 'sine'; osc.frequency.setValueAtTime(200, now);
-                gain.gain.setValueAtTime(0.05, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
-                osc.start(); osc.stop(now + 0.05);
-            } else if (type === 'success') {
-                osc.type = 'triangle'; osc.frequency.setValueAtTime(440, now);
-                osc.frequency.exponentialRampToValueAtTime(880, now + 0.2);
-                gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
-                osc.start(); osc.stop(now + 0.3);
-            } else if (type === 'error') {
-                osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, now);
-                gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
-                osc.start(); osc.stop(now + 0.2);
-            }
+            const g = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            g.gain.setValueAtTime(vol, audioCtx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
+            osc.connect(g); g.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + dur);
         }
 
-        // --- PREGUNTAS CULTURA GENERAL ---
-        const generalQuestions = {
-            letras: [
-                { q: "¿En qué país nació William Shakespeare?", a: ["Escocia", "Gales", "Inglaterra", "Irlanda"], c: 2, id: "g1" },
-                { q: "¿Quién escribió 'Don Quijote de la Mancha'?", a: ["Lorca", "Cervantes", "Quevedo", "Lope de Vega"], c: 1, id: "g2" },
-                { q: "¿Cuál es el río más largo del mundo?", a: ["Amazonas", "Nilo", "Mississippi", "Danubio"], c: 0, id: "g3" },
-                { q: "¿En qué continente está el desierto del Sahara?", a: ["Asia", "América", "África", "Oceanía"], c: 2, id: "g4" }
-            ],
-            logica: [
-                { q: "Si tengo 3 manzanas y me quitas 2, ¿cuántas tienes tú?", a: ["1", "2", "3", "0"], c: 1, id: "l1" },
-                { q: "¿Qué pesa más, un kilo de plomo o un kilo de paja?", a: ["Plomo", "Paja", "Pesan igual", "Depende"], c: 2, id: "l2" },
-                { q: "Padre de Juan tiene 3 hijos: Pim, Pam y...", a: ["Pum", "Juan", "Pon", "Pan"], c: 1, id: "l3" }
-            ]
+        function playMelodyStep(step = 0) {
+            if (!isMusicPlaying) return;
+            const note = melody[step % melody.length];
+            playTone(note.f, note.d * 2, 'triangle', 0.05);
+            // Bajo acompañante
+            if (step % 4 === 0) playTone(note.f / 2, note.d * 4, 'sine', 0.03);
+            
+            melodyTimeout = setTimeout(() => playMelodyStep(step + 1), note.d * 1000);
+        }
+
+        function playSpinTick() {
+            playTone(800 + Math.random() * 200, 0.05, 'square', 0.02);
+        }
+
+        function playSuccess() {
+            const now = audioCtx.currentTime;
+            [523.25, 659.25, 783.99, 1046.50].forEach((f, i) => {
+                const osc = audioCtx.createOscillator();
+                const g = audioCtx.createGain();
+                osc.frequency.setValueAtTime(f, now + i * 0.1);
+                g.gain.setValueAtTime(0.1, now + i * 0.1);
+                g.gain.exponentialRampToValueAtTime(0.001, now + i * 0.1 + 0.5);
+                osc.connect(g); g.connect(audioCtx.destination);
+                osc.start(now + i * 0.1); osc.stop(now + i * 0.1 + 0.5);
+            });
+        }
+
+        function playError() {
+            playTone(150, 0.5, 'sawtooth', 0.1);
+            playTone(110, 0.7, 'sawtooth', 0.1);
+        }
+
+        function toggleMusic() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            isMusicPlaying = !isMusicPlaying;
+            document.getElementById('music-icon').textContent = isMusicPlaying ? '🔊' : '🔇';
+            if (isMusicPlaying) playMelodyStep();
+            else clearTimeout(melodyTimeout);
+        }
+
+        // --- NIEVE ---
+        const snowCanvas = document.getElementById('snow');
+        const sctx = snowCanvas.getContext('2d');
+        let flakes = [];
+
+        function initSnow() {
+            snowCanvas.width = window.innerWidth;
+            snowCanvas.height = window.innerHeight;
+            flakes = Array.from({length: 100}, () => ({
+                x: Math.random() * snowCanvas.width,
+                y: Math.random() * snowCanvas.height,
+                r: Math.random() * 3 + 1,
+                d: Math.random() * 1
+            }));
+        }
+
+        function drawSnow() {
+            sctx.clearRect(0, 0, snowCanvas.width, snowCanvas.height);
+            sctx.fillStyle = "white";
+            sctx.beginPath();
+            flakes.forEach(f => {
+                sctx.moveTo(f.x, f.y);
+                sctx.arc(f.x, f.y, f.r, 0, Math.PI*2);
+                f.y += Math.cos(f.d) + 1 + f.r/2;
+                f.x += Math.sin(f.d) * 2;
+                if(f.y > snowCanvas.height) f.y = -10, f.x = Math.random()*snowCanvas.width;
+            });
+            sctx.fill();
+            requestAnimationFrame(drawSnow);
+        }
+        window.addEventListener('resize', initSnow);
+        initSnow(); drawSnow();
+
+        // --- PREGUNTAS ---
+        const questions = {
+            letras: {
+                junior: [
+                    { q: "¿Qué animal utilizan los Reyes Magos para viajar?", a: ["Camello", "Caballo", "Elefante", "Reno"], c: 0 },
+                    { q: "¿Cómo se llama el roscón típico de este día?", a: ["Roscón de Reyes", "Panettone", "Turrón", "Mazapán"], c: 0 },
+                    { q: "¿Qué le dejan los niños a los camellos?", a: ["Agua y paja", "Leche y galletas", "Caramelos", "Nada"], c: 0 }
+                ],
+                senior: [
+                    { q: "¿Qué ciudad es el destino final de los Reyes Magos?", a: ["Belén", "Nazaret", "Jerusalén", "Egipto"], c: 0 },
+                    { q: "¿Qué regalo entregó Gaspar?", a: ["Incienso", "Oro", "Mirra", "Diamantes"], c: 0 },
+                    { q: "¿Qué significa 'Epifanía'?", a: ["Manifestación", "Regalo", "Estrella", "Nacimiento"], c: 0 }
+                ],
+                master: [
+                    { q: "¿Qué rey entregó la Mirra?", a: ["Baltasar", "Melchor", "Gaspar", "Herodes"], c: 0 },
+                    { q: "¿En qué catedral se dice que descansan sus reliquias?", a: ["Colonia", "Roma", "París", "Santiago"], c: 0 }
+                ]
+            },
+            logica: {
+                junior: [
+                    { q: "Si Melchor tiene 3 pajes y Gaspar 2, ¿cuántos pajes hay?", a: ["5", "6", "4", "3"], c: 0 },
+                    { q: "¿Qué pesa más, 1kg de oro o 1kg de incienso?", a: ["Igual", "Oro", "Incienso", "Mirra"], c: 0 }
+                ],
+                senior: [
+                    { q: "¿Cuántas patas tienen los 3 camellos de los Reyes?", a: ["12", "15", "9", "18"], c: 0 },
+                    { q: "Si sigues una estrella al Norte, ¿qué mano te queda al Este?", a: ["Derecha", "Izquierda", "Atrás", "Delante"], c: 0 }
+                ],
+                master: [
+                    { q: "Si hay 3 reyes y cada uno da 3 regalos a 3 niños, ¿cuántos regalos hay?", a: ["27", "9", "18", "12"], c: 0 }
+                ]
+            }
         };
 
         // --- ESTADO ---
         let players = [];
         let scores = {};
         let currentIdx = 0;
-        let usedQuestions = new Set();
-        let usedBioFacts = new Set();
+        let selectedDifficulty = 'senior';
         let isSpinning = false;
         let timerId;
-        let currentChallenge = null;
-        let selectedLevel = 60;
 
         const categories = [
-            { id: "letras", name: "Letras", color: "#1e40af" },
-            { id: "logica", name: "Lógica", color: "#065f46" },
-            { id: "biografia", name: "Biografía", color: "#9f1239" },
-            { id: "letras2", name: "Letras", color: "#1e40af" },
-            { id: "logica2", name: "Lógica", color: "#065f46" },
-            { id: "biografia2", name: "Biografía", color: "#9f1239" }
+            { id: "letras", name: "Sabiduría", color: "#1e3a8a" },
+            { id: "logica", name: "Ingenio", color: "#166534" },
+            { id: "biografia", name: "El Enigma", color: "#991b1b" },
+            { id: "enigmaia", name: "Visión Real", color: "#b45309" }
         ];
 
-        window.setAge = (val, btn) => {
-            selectedLevel = val;
-            document.querySelectorAll('.age-btn').forEach(b => b.className = "age-btn border border-slate-700 py-3 rounded-xl text-white");
-            btn.className = "age-btn border-2 border-blue-500 bg-blue-500/10 py-3 rounded-xl text-white font-bold";
-            playSound('click');
-        };
+        // --- LOGICA DEL JUEGO ---
+        function setDifficulty(val, btn) {
+            selectedDifficulty = val;
+            document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('border-yellow-500', 'bg-yellow-500/10', 'border-2', 'font-bold'));
+            btn.classList.add('border-yellow-500', 'bg-yellow-500/10', 'border-2', 'font-bold');
+        }
+
+        document.getElementById('config-text').oninput = updateParticipantSelection;
+
+        function updateParticipantSelection() {
+            const raw = document.getElementById('config-text').value;
+            const lines = raw.split('\n').filter(l => l.trim().length > 0);
+            const container = document.getElementById('participant-chips');
+            const area = document.getElementById('participant-selection-area');
+            let tempPlayers = [];
+            for (let i = 0; i < lines.length; i += 2) { if (lines[i]) tempPlayers.push(lines[i].trim()); }
+            if (tempPlayers.length > 0) {
+                area.classList.remove('hidden');
+                container.innerHTML = tempPlayers.map(name => `<div class="participant-tag px-3 py-1 rounded-full border border-yellow-900 text-xs selected" onclick="this.classList.toggle('selected')">${name}</div>`).join('');
+            } else area.classList.add('hidden');
+        }
 
         document.getElementById('start-game-btn').onclick = () => {
-            const lines = document.getElementById('config-text').value.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            const raw = document.getElementById('config-text').value;
+            const lines = raw.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            const chips = Array.from(document.querySelectorAll('.participant-tag.selected')).map(c => c.textContent.trim());
             players = [];
             for (let i = 0; i < lines.length; i += 2) {
                 if (lines[i] && lines[i+1]) {
-                    const facts = lines[i+1].split(/[.!?]/).map(f => f.trim()).filter(f => f.length > 3);
-                    players.push({ id: players.length, nombre: lines[i], facts: facts });
+                    players.push({
+                        id: players.length,
+                        nombre: lines[i],
+                        facts: lines[i+1].split(/[.!?]/).map(f => f.trim()).filter(f => f.length > 3),
+                        includeInBio: chips.includes(lines[i])
+                    });
                 }
             }
-            if (players.length < 2) return alert("Introduce al menos 2 participantes.");
+            if (players.length < 2) return alert("¡Introduce al menos a dos participantes!");
             players.forEach(p => scores[p.nombre] = 0);
             document.getElementById('screen-config').classList.remove('active');
             document.getElementById('screen-game').classList.add('active');
-            updateScoreboard();
-            drawWheel();
+            updateScoreboard(); drawWheel();
         };
 
         function drawWheel() {
             const canvas = document.getElementById('wheel'), ctx = canvas.getContext('2d');
-            const w = canvas.width, center = w / 2, radius = center - 20, slice = (Math.PI * 2) / categories.length;
+            const w = canvas.width, center = w / 2, radius = center - 30, slice = (Math.PI * 2) / categories.length;
             ctx.clearRect(0,0,w,w);
             categories.forEach((cat, i) => {
                 ctx.beginPath(); ctx.fillStyle = cat.color; ctx.moveTo(center, center);
                 ctx.arc(center, center, radius, i * slice, (i + 1) * slice); ctx.fill();
                 ctx.save(); ctx.translate(center, center); ctx.rotate(i * slice + slice / 2);
-                ctx.fillStyle = "white"; ctx.font = "bold 32px Poppins"; ctx.textAlign = "right";
-                ctx.fillText(cat.name.toUpperCase(), radius - 40, 10); ctx.restore();
+                ctx.fillStyle = "white"; ctx.font = "900 36px Cinzel"; ctx.textAlign = "right";
+                ctx.shadowBlur = 10; ctx.shadowColor = "black";
+                ctx.fillText(cat.name.toUpperCase(), radius - 40, 12); ctx.restore();
             });
         }
 
@@ -263,8 +444,16 @@ Es un experto cocinando paellas. Toca la batería."></textarea>
             const canvas = document.getElementById('wheel');
             const rotation = 3600 + Math.random() * 360;
             canvas.style.transform = `rotate(${rotation}deg)`;
-            let clickCount = 0;
-            const clickInt = setInterval(() => { if(clickCount < 30) { playSound('click'); clickCount++; } else clearInterval(clickInt); }, 150);
+
+            // Sonido de giro rítmico
+            let ticks = 0;
+            const totalTicks = 40;
+            const tickInterval = setInterval(() => {
+                if (ticks >= totalTicks) clearInterval(tickInterval);
+                playSpinTick();
+                ticks++;
+            }, 120);
+
             setTimeout(() => {
                 isSpinning = false;
                 const deg = rotation % 360;
@@ -273,48 +462,57 @@ Es un experto cocinando paellas. Toca la batería."></textarea>
             }, 5000);
         };
 
-        function showChallenge(cat) {
+        async function showChallenge(cat) {
             document.getElementById('wheel-view').classList.add('hidden');
             document.getElementById('challenge-view').classList.remove('hidden');
             document.getElementById('feedback-area').classList.add('hidden');
             document.getElementById('options-grid').innerHTML = "";
+            document.getElementById('ai-image-container').classList.add('hidden');
             document.getElementById('cat-label').textContent = cat.name;
 
-            const baseCatId = cat.id.replace(/\d+/g, ''); // Para manejar 'letras' y 'letras2' igual
-
-            if (baseCatId === "biografia") {
-                const challenge = getUniqueBioChallenge();
-                document.getElementById('question-text').textContent = challenge.text;
-                currentChallenge = { a: players.map(p => p.nombre), c: challenge.playerId };
-                players.forEach(p => renderBtn(p.nombre, p.id === challenge.playerId));
-            } else {
-                // Cultura general sin mencionar participantes
-                const pool = generalQuestions[baseCatId];
-                const available = pool.filter(q => !usedQuestions.has(q.id));
-                const selected = available.length > 0 ? available[Math.floor(Math.random() * available.length)] : pool[0];
-                usedQuestions.add(selected.id);
-                currentChallenge = selected;
-                document.getElementById('question-text').textContent = selected.q;
-                selected.a.forEach((t, i) => renderBtn(t, i === selected.c));
+            if (cat.id === "letras" || cat.id === "logica") {
+                const pool = questions[cat.id][selectedDifficulty];
+                const q = pool[Math.floor(Math.random() * pool.length)];
+                document.getElementById('question-text').textContent = q.q;
+                q.a.forEach((t, i) => renderBtn(t, i === q.c));
+            } else if (cat.id === "biografia") {
+                const bio = getBioChallenge();
+                document.getElementById('question-text').textContent = bio.text;
+                players.forEach(p => renderBtn(p.nombre, p.id === bio.playerId));
+            } else if (cat.id === "enigmaia") {
+                document.getElementById('ai-image-container').classList.remove('hidden');
+                document.getElementById('ai-loader').classList.remove('hidden');
+                document.getElementById('ai-img').classList.add('hidden');
+                document.getElementById('question-text').textContent = "Consultando a las estrellas...";
+                const target = players.filter(p => p.includeInBio)[Math.floor(Math.random() * players.length)] || players[0];
+                try {
+                    const imgUrl = await generateAIImage(`Majestic oil painting of a king's golden gift representing: ${target.facts[0]}. Christmas stars background.`);
+                    document.getElementById('ai-loader').classList.add('hidden');
+                    document.getElementById('ai-img').src = imgUrl;
+                    document.getElementById('ai-img').classList.remove('hidden');
+                    document.getElementById('question-text').textContent = "¿De quién es esta ofrenda?";
+                    players.forEach(p => renderBtn(p.nombre, p.id === target.id));
+                } catch (e) {
+                    document.getElementById('question-text').textContent = "¿Quién destaca por: " + target.facts[0] + "?";
+                    players.forEach(p => renderBtn(p.nombre, p.id === target.id));
+                }
             }
             startTimer();
         }
 
-        function getUniqueBioChallenge() {
-            let available = [];
-            players.forEach(p => {
-                p.facts.forEach(f => {
-                    if (!usedBioFacts.has(`${p.id}-${f}`)) available.push({ p, f });
-                });
-            });
-            if (available.length === 0) { usedBioFacts.clear(); return getUniqueBioChallenge(); }
-            const chosen = available[Math.floor(Math.random() * available.length)];
-            usedBioFacts.add(`${chosen.p.id}-${chosen.f}`);
-            const intros = ["¿Quién...", "¿A quién nos referimos con...", "¿Qué participante...", "¿A quién describe esto:"];
-            return {
-                text: `${intros[Math.floor(Math.random() * intros.length)]} "${chosen.f.substring(0, 50)}..."?`,
-                playerId: chosen.p.id
-            };
+        async function generateAIImage(prompt) {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${apiKey}`;
+            const response = await fetch(url, { method: 'POST', body: JSON.stringify({ instances: { prompt }, parameters: { sampleCount: 1 } }) });
+            const result = await response.json();
+            return `data:image/png;base64,${result.predictions[0].bytesBase64Encoded}`;
+        }
+
+        function getBioChallenge() {
+            let bioPool = [];
+            players.forEach(p => { if (p.includeInBio) p.facts.forEach(f => bioPool.push({ p, f })); });
+            if (bioPool.length === 0) return { text: "¿Quién es " + players[0].nombre + "?", playerId: 0 };
+            const chosen = bioPool[Math.floor(Math.random() * bioPool.length)];
+            return { text: `¿A qué sabio define: "${chosen.f}"?`, playerId: chosen.p.id };
         }
 
         function renderBtn(text, isCorrect) {
@@ -327,33 +525,32 @@ Es un experto cocinando paellas. Toca la batería."></textarea>
         function startTimer() {
             let left = 20; const display = document.getElementById('timer-display');
             display.textContent = left; clearInterval(timerId);
-            timerId = setInterval(() => { left--; display.textContent = left; if (left <= 0) resolve(false, "¡TIEMPO!"); }, 1000);
+            timerId = setInterval(() => { left--; display.textContent = left; if (left <= 0) resolve(false); }, 1000);
         }
 
-        function resolve(correct, msg) {
+        function resolve(correct) {
             clearInterval(timerId);
             document.querySelectorAll('.btn-answer').forEach(b => b.disabled = true);
             const feedback = document.getElementById('feedback-area');
             feedback.classList.remove('hidden');
             if (correct) {
-                playSound('success');
-                document.getElementById('feedback-msg').textContent = msg || "¡CORRECTO!";
-                document.getElementById('feedback-msg').className = "serif text-4xl font-bold text-blue-400";
+                playSuccess();
+                document.getElementById('feedback-msg').textContent = "¡GLORIA REAL!";
+                document.getElementById('feedback-msg').className = "serif-royal text-4xl font-bold text-yellow-400";
                 scores[players[currentIdx].nombre] += 10;
             } else {
-                playSound('error');
-                document.getElementById('feedback-msg').textContent = msg || "¡OH NO!";
-                document.getElementById('feedback-msg').className = "serif text-4xl font-bold text-rose-500";
-                if (currentChallenge) document.getElementById('correct-ans-text').textContent = `Correcto: ${currentChallenge.a[currentChallenge.c]}`;
+                playError();
+                document.getElementById('feedback-msg').textContent = "¡CARBONCILLO!";
+                document.getElementById('feedback-msg').className = "serif-royal text-4xl font-bold text-red-500";
             }
             updateScoreboard();
         }
 
         function updateScoreboard() {
             document.getElementById('scoreboard').innerHTML = players.map((p, i) => `
-                <div class="flex justify-between items-center p-3 rounded-xl ${i === currentIdx ? 'bg-blue-600/30 border border-blue-500/50' : 'bg-white/5'}">
-                    <span class="font-bold truncate max-w-[150px]">${p.nombre}</span>
-                    <span class="bg-blue-600 px-2 py-1 rounded text-xs font-black">${scores[p.nombre]}</span>
+                <div class="flex justify-between items-center p-3 rounded-2xl ${i === currentIdx ? 'bg-yellow-500/20 border border-yellow-500' : 'bg-white/5'}">
+                    <span class="font-bold truncate">${p.nombre}</span>
+                    <span class="bg-yellow-600 px-3 py-1 rounded-lg text-xs font-black text-slate-900">${scores[p.nombre]}</span>
                 </div>
             `).join('');
             document.getElementById('active-player-name').textContent = players[currentIdx].nombre;
@@ -364,10 +561,19 @@ Es un experto cocinando paellas. Toca la batería."></textarea>
             document.getElementById('challenge-view').classList.add('hidden');
             document.getElementById('wheel-view').classList.remove('hidden');
             document.getElementById('wheel').style.transform = "rotate(0deg)";
-            document.getElementById('correct-ans-text').textContent = "";
-            playSound('click'); updateScoreboard();
+        };
+
+        document.getElementById('end-game-btn').onclick = () => {
+            document.getElementById('screen-game').classList.remove('active');
+            document.getElementById('screen-podium').classList.add('active');
+            const sorted = Object.entries(scores).sort((a,b) => b[1] - a[1]);
+            document.getElementById('podium-list').innerHTML = sorted.map(([name, score], i) => `
+                <div class="flex justify-between p-4 bg-white/5 rounded-xl border border-yellow-500/30 ${i===0?'scale-110 border-yellow-500 bg-yellow-500/10 shadow-lg':''}">
+                    <span class="font-black text-xl">${i+1}º ${name}</span>
+                    <span class="text-yellow-400 font-mono">${score} pts</span>
+                </div>
+            `).join('');
         };
     </script>
 </body>
 </html>
-
