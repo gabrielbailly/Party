@@ -1,524 +1,94 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>La Ruleta Mágica de Reyes</title>
-    
-    <!-- Metatags para Dispositivos Móviles (PWA-like) -->
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Ruleta Reyes">
-    <link id="favicon" rel="icon" type="image/png" href="">
-    <link id="apple-touch-icon" rel="apple-touch-icon" href="">
-
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Party & Co: Especial Reyes Magos</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Cinzel+Decorative:wght@700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Poppins:wght@300;400;600&display=swap');
-
-        :root {
-            --royal-blue: #0f172a;
-            --gold: #fbbf24;
-            --crimson: #991b1b;
-        }
-
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: radial-gradient(circle at center, #1e293b 0%, #070a13 100%);
-            color: #f8fafc;
-            min-height: 100vh;
-            margin: 0;
-            overflow-x: hidden;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        .serif-royal { font-family: 'Cinzel', serif; }
-
-        /* Efecto Nieve */
-        #snow {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        .screen { display: none; min-height: 100vh; padding: 2rem; position: relative; z-index: 1; }
-        .screen.active { display: flex; flex-direction: column; align-items: center; }
-
-        .glass-card {
-            background: rgba(15, 23, 42, 0.85);
-            backdrop-filter: blur(12px);
-            border: 2px solid var(--gold);
-            border-radius: 40px;
-            width: 100%;
-            max-width: 900px;
-            padding: 2.5rem;
-            box-shadow: 0 0 50px rgba(251, 191, 36, 0.2);
-        }
-
-        #wheel-container {
-            position: relative;
-            width: clamp(280px, 70vw, 420px);
-            height: clamp(280px, 70vw, 420px);
-            margin: 0 auto;
-        }
-
-        canvas#wheel {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            border: 12px solid var(--gold);
-            box-shadow: 0 0 60px rgba(251, 191, 36, 0.4);
-            transition: transform 5s cubic-bezier(0.1, 0, 0.1, 1);
-        }
-
-        .btn-answer {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--gold);
-            padding: 1.2rem;
-            border-radius: 20px;
-            transition: all 0.3s;
-            text-align: center;
-        }
-
-        .btn-answer:hover:not(:disabled) {
-            background: rgba(251, 191, 36, 0.2);
-            transform: translateY(-3px);
-        }
-
-        .participant-tag.selected {
-            background: var(--gold);
-            color: var(--royal-blue);
-            font-weight: bold;
-        }
-
-        .crown-icon {
-            filter: drop-shadow(0 0 5px var(--gold));
-        }
-
-        #music-toggle {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: var(--gold);
-            color: var(--royal-blue);
-            width: 55px; height: 55px;
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer;
-            z-index: 100;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-            font-size: 1.5rem;
-            transition: transform 0.2s;
-        }
-
-        .loader {
-            border: 4px solid rgba(251, 191, 36, 0.1);
-            border-left-color: var(--gold);
-            border-radius: 50%;
-            width: 40px; height: 40px;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
+      body {
+        font-family: 'Inter', sans-serif;
+        background: radial-gradient(circle at top, #1e1b4b 0%, #020617 100%);
+        color: white;
+        min-height: 100vh;
+        margin: 0;
+        overflow-x: hidden;
+      }
+      .font-bungee {
+        font-family: 'Bungee', cursive;
+      }
+      .font-royal {
+        font-family: 'Cinzel Decorative', cursive;
+      }
+      .star-bg {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        background-image: radial-gradient(1px 1px at 20px 30px, #eee, rgba(0,0,0,0)),
+                          radial-gradient(1px 1px at 40px 70px, #fff, rgba(0,0,0,0)),
+                          radial-gradient(2px 2px at 50px 160px, #ddd, rgba(0,0,0,0)),
+                          radial-gradient(2px 2px at 90px 40px, #fff, rgba(0,0,0,0)),
+                          radial-gradient(1px 1px at 130px 80px, #fff, rgba(0,0,0,0)),
+                          radial-gradient(2px 2px at 160px 120px, #ddd, rgba(0,0,0,0));
+        background-repeat: repeat;
+        background-size: 200px 200px;
+        opacity: 0.3;
+        z-index: -1;
+      }
+      .gold-border {
+        border: 4px solid #fbbf24;
+        box-shadow: 0 0 15px rgba(251, 191, 36, 0.4);
+      }
+      .animate-float {
+        animation: float 6s ease-in-out infinite;
+      }
+      .animate-slide-up {
+        animation: slideUp 0.5s ease-out forwards;
+      }
+      @keyframes slideUp {
+        from { transform: translateY(100px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+      }
+      @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+      }
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 8px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: rgba(30, 27, 75, 0.5);
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #fbbf24;
+        border-radius: 10px;
+      }
     </style>
+
+<link rel="stylesheet" href="/index.css">
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.34.0",
+    "vite": "https://esm.sh/vite@^7.3.0",
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2"
+  }
+}
+</script>
+  <script type="module" crossorigin src="/assets/index-DCvFlvfr.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/vendor-DA9cbHh8.js">
 </head>
-<body>
-
-    <canvas id="snow"></canvas>
-
-    <!-- Icon Generator (Hidden) -->
-    <canvas id="icon-gen" width="180" height="180" style="display:none;"></canvas>
-
-    <div id="music-toggle" onclick="toggleMusic()">
-        <span id="music-icon">🔇</span>
-    </div>
-
-    <!-- CONFIGURACIÓN -->
-    <section id="screen-config" class="screen active justify-center">
-        <div class="glass-card text-center">
-            <div class="flex justify-center mb-4">
-                <span class="text-6xl crown-icon">👑</span>
-            </div>
-            <h1 class="serif-royal text-6xl mb-2 text-yellow-400 font-black">La Ruleta Mágica</h1>
-            <p class="text-indigo-200 text-sm mb-8 tracking-widest uppercase">Especial Día de Reyes</p>
-            
-            <div class="space-y-6 text-left">
-                <div>
-                    <label class="block text-xs font-black uppercase text-yellow-500/70 mb-4 tracking-widest text-center">Dificultad de los Sabios</label>
-                    <div class="grid grid-cols-3 gap-3">
-                        <button onclick="setDifficulty('junior', this)" class="diff-btn border border-slate-700 py-3 rounded-xl text-white">Paje</button>
-                        <button onclick="setDifficulty('senior', this)" class="diff-btn border-2 border-yellow-500 bg-yellow-500/10 py-3 rounded-xl text-white font-bold">Caballero</button>
-                        <button onclick="setDifficulty('master', this)" class="diff-btn border border-slate-700 py-3 rounded-xl text-white">Rey Mago</button>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-black uppercase text-yellow-500/70 mb-2">Libro de los Participantes</label>
-                    <textarea id="config-text" class="w-full h-32 bg-slate-900 border border-yellow-900 p-4 rounded-xl text-white font-mono text-xs focus:border-yellow-500 outline-none" 
-placeholder="Melchor
-Le encanta el oro. Viaja siempre en camello.
-Gaspar
-Es experto en astronomía. Prefiere el incienso."></textarea>
-                </div>
-
-                <div id="participant-selection-area" class="hidden">
-                    <label class="block text-xs font-black uppercase text-yellow-500/70 mb-3 tracking-widest">Participantes en "El Enigma":</label>
-                    <div id="participant-chips" class="flex flex-wrap gap-2"></div>
-                </div>
-            </div>
-
-            <button id="start-game-btn" class="w-full mt-8 bg-gradient-to-r from-yellow-600 to-yellow-400 hover:from-yellow-500 hover:to-yellow-300 text-slate-900 font-black py-4 rounded-2xl text-xl shadow-[0_0_30px_rgba(251,191,36,0.3)] transition-all transform hover:scale-105">
-                ¡QUE COMIENCE LA MAGIA!
-            </button>
-        </div>
-    </section>
-
-    <!-- JUEGO -->
-    <section id="screen-game" class="screen">
-        <div class="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8 w-full max-w-7xl">
-            <main class="flex flex-col items-center space-y-6">
-                <div class="flex justify-between w-full items-center bg-black/20 p-4 rounded-2xl border border-yellow-500/20">
-                    <h2 class="serif-royal text-2xl text-yellow-500">La Ruleta Mágica</h2>
-                    <button id="end-game-btn" class="bg-red-900/40 hover:bg-red-700 text-red-200 px-4 py-2 rounded-lg text-xs font-bold transition-all border border-red-500/30">TERMINAR</button>
-                </div>
-
-                <div id="wheel-view" class="w-full flex flex-col items-center space-y-8">
-                    <div id="wheel-container">
-                        <div class="absolute -top-8 left-1/2 -translate-x-1/2 text-5xl z-10 animate-pulse">⭐️</div>
-                        <canvas id="wheel" width="800" height="800"></canvas>
-                    </div>
-                    <button id="spin-btn" class="bg-gradient-to-b from-yellow-400 to-yellow-600 text-slate-900 px-20 py-5 rounded-3xl text-3xl font-black shadow-2xl transition-all active:scale-95 border-b-4 border-yellow-800">
-                        GIRAR DESTINO
-                    </button>
-                </div>
-
-                <div id="challenge-view" class="glass-card w-full hidden max-w-2xl">
-                    <div class="flex justify-between items-center mb-6">
-                        <span id="cat-label" class="text-xs font-black uppercase tracking-widest px-4 py-1 rounded-full border border-yellow-500/40 text-yellow-500"></span>
-                        <div id="timer-display" class="border-2 border-yellow-500 text-yellow-500 rounded-full w-12 h-12 flex items-center justify-center font-bold">20</div>
-                    </div>
-                    
-                    <div id="ai-image-container" class="hidden mb-6 flex flex-col items-center">
-                        <div id="ai-loader" class="flex flex-col items-center p-8 space-y-4">
-                            <div class="loader"></div>
-                            <p class="text-xs text-yellow-500 animate-pulse italic">Invocando visiones...</p>
-                        </div>
-                        <img id="ai-img" class="hidden w-72 h-72 rounded-3xl object-cover shadow-2xl border-4 border-yellow-500/50" src="" alt="Enigma">
-                    </div>
-
-                    <h3 id="question-text" class="text-2xl font-bold mb-8 text-center leading-relaxed"></h3>
-                    <div id="options-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
-
-                    <div id="feedback-area" class="hidden mt-10 text-center">
-                        <p id="feedback-msg" class="serif-royal text-4xl font-bold mb-8"></p>
-                        <button id="next-btn" class="bg-yellow-500 text-slate-900 font-black px-12 py-4 rounded-2xl shadow-xl hover:bg-yellow-400">SIGUIENTE TURNO</button>
-                    </div>
-                </div>
-            </main>
-
-            <!-- SCOREBOARD -->
-            <aside class="glass-card h-fit space-y-6 !border-yellow-900/50">
-                <h3 class="serif-royal text-2xl text-yellow-500 border-b border-yellow-500/20 pb-4 text-center">Ofrendas</h3>
-                <div id="scoreboard" class="space-y-3"></div>
-                <div class="pt-6 mt-4 border-t border-yellow-500/20 text-center">
-                    <p class="text-[10px] uppercase text-slate-500 font-black mb-1">Turno de:</p>
-                    <p id="active-player-name" class="text-xl font-bold text-yellow-200 truncate">---</p>
-                </div>
-            </aside>
-        </div>
-    </section>
-
-    <!-- PODIO FINAL -->
-    <section id="screen-podium" class="screen justify-center">
-        <div class="glass-card text-center max-w-lg">
-            <h2 class="serif-royal text-5xl text-yellow-400 font-black mb-8">El Banquete Real</h2>
-            <div id="podium-list" class="space-y-4 mb-10"></div>
-            <button onclick="location.reload()" class="bg-yellow-600 px-10 py-4 rounded-xl font-bold text-white">NUEVA PARTIDA</button>
-        </div>
-    </section>
-
-    <script>
-        const apiKey = "";
-        
-        // --- GENERADOR DE FAVICON E ICONO APPLE ---
-        function generateAppIcon() {
-            const canvas = document.getElementById('icon-gen');
-            const ctx = canvas.getContext('2d');
-            
-            // Fondo real
-            const gradient = ctx.createRadialGradient(90, 90, 0, 90, 90, 120);
-            gradient.addColorStop(0, '#1e293b');
-            gradient.addColorStop(1, '#070a13');
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, 180, 180);
-
-            // Borde dorado
-            ctx.strokeStyle = '#fbbf24';
-            ctx.lineWidth = 8;
-            ctx.strokeRect(4, 4, 172, 172);
-
-            // Corona
-            ctx.font = '100px serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = '#fbbf24';
-            ctx.fillText('👑', 90, 95);
-
-            const dataUrl = canvas.toDataURL('image/png');
-            document.getElementById('favicon').href = dataUrl;
-            document.getElementById('apple-touch-icon').href = dataUrl;
-        }
-
-        // --- AUDIO ---
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        let isMusicPlaying = false;
-        let melodyTimeout;
-
-        const melody = [
-            {f: 261, d: 0.4}, {f: 349, d: 0.4}, {f: 349, d: 0.2}, {f: 392, d: 0.2}, {f: 349, d: 0.2}, {f: 329, d: 0.2}, {f: 293, d: 0.4}, {f: 293, d: 0.4},
-            {f: 293, d: 0.4}, {f: 392, d: 0.4}, {f: 392, d: 0.2}, {f: 440, d: 0.2}, {f: 392, d: 0.2}, {f: 349, d: 0.2}, {f: 329, d: 0.4}, {f: 261, d: 0.4},
-            {f: 261, d: 0.4}, {f: 440, d: 0.4}, {f: 440, d: 0.2}, {f: 466, d: 0.2}, {f: 440, d: 0.2}, {f: 392, d: 0.2}, {f: 349, d: 0.4}, {f: 293, d: 0.4},
-            {f: 261, d: 0.2}, {f: 261, d: 0.2}, {f: 293, d: 0.4}, {f: 392, d: 0.4}, {f: 329, d: 0.4}, {f: 349, d: 0.8}
-        ];
-
-        function playTone(freq, dur, type = 'sine', vol = 0.1) {
-            const osc = audioCtx.createOscillator();
-            const g = audioCtx.createGain();
-            osc.type = type;
-            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-            g.gain.setValueAtTime(vol, audioCtx.currentTime);
-            g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
-            osc.connect(g); g.connect(audioCtx.destination);
-            osc.start(); osc.stop(audioCtx.currentTime + dur);
-        }
-
-        function playMelodyStep(step = 0) {
-            if (!isMusicPlaying) return;
-            const note = melody[step % melody.length];
-            playTone(note.f, note.d * 2, 'triangle', 0.05);
-            if (step % 4 === 0) playTone(note.f / 2, note.d * 4, 'sine', 0.03);
-            melodyTimeout = setTimeout(() => playMelodyStep(step + 1), note.d * 1000);
-        }
-
-        function toggleMusic() {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            isMusicPlaying = !isMusicPlaying;
-            document.getElementById('music-icon').textContent = isMusicPlaying ? '🔊' : '🔇';
-            if (isMusicPlaying) playMelodyStep();
-            else clearTimeout(melodyTimeout);
-        }
-
-        // --- NIEVE ---
-        const snowCanvas = document.getElementById('snow');
-        const sctx = snowCanvas.getContext('2d');
-        let flakes = [];
-        function initSnow() {
-            snowCanvas.width = window.innerWidth;
-            snowCanvas.height = window.innerHeight;
-            flakes = Array.from({length: 80}, () => ({
-                x: Math.random() * snowCanvas.width,
-                y: Math.random() * snowCanvas.height,
-                r: Math.random() * 3 + 1, d: Math.random() * 1
-            }));
-        }
-        function drawSnow() {
-            sctx.clearRect(0, 0, snowCanvas.width, snowCanvas.height);
-            sctx.fillStyle = "white";
-            sctx.beginPath();
-            flakes.forEach(f => {
-                sctx.moveTo(f.x, f.y);
-                sctx.arc(f.x, f.y, f.r, 0, Math.PI*2);
-                f.y += 1 + f.r/2;
-                if(f.y > snowCanvas.height) f.y = -10, f.x = Math.random()*snowCanvas.width;
-            });
-            sctx.fill();
-            requestAnimationFrame(drawSnow);
-        }
-
-        // --- PREGUNTAS ---
-        const questions = {
-            letras: {
-                junior: [{ q: "¿Qué animal utilizan los Reyes?", a: ["Camello", "Caballo", "Elefante", "Reno"], c: 0 }],
-                senior: [{ q: "¿Qué regalo entregó Gaspar?", a: ["Incienso", "Oro", "Mirra", "Diamantes"], c: 0 }],
-                master: [{ q: "¿Qué rey entregó la Mirra?", a: ["Baltasar", "Melchor", "Gaspar", "Herodes"], c: 0 }]
-            },
-            logica: {
-                junior: [{ q: "Si Melchor tiene 3 pajes y Gaspar 2, ¿cuántos hay?", a: ["5", "6", "4", "3"], c: 0 }],
-                senior: [{ q: "¿Cuántas patas tienen los 3 camellos?", a: ["12", "15", "9", "18"], c: 0 }],
-                master: [{ q: "3 reyes dan 3 regalos a 3 niños, ¿total?", a: ["27", "9", "18", "12"], c: 0 }]
-            }
-        };
-
-        // --- ESTADO ---
-        let players = [];
-        let scores = {};
-        let currentIdx = 0;
-        let selectedDifficulty = 'senior';
-        let isSpinning = false;
-        let timerId;
-
-        const categories = [
-            { id: "letras", name: "Sabiduría", color: "#1e3a8a" },
-            { id: "logica", name: "Ingenio", color: "#166534" },
-            { id: "biografia", name: "El Enigma", color: "#991b1b" },
-            { id: "enigmaia", name: "Visión Real", color: "#b45309" }
-        ];
-
-        // --- LOGICA ---
-        function setDifficulty(val, btn) {
-            selectedDifficulty = val;
-            document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('border-yellow-500', 'bg-yellow-500/10', 'border-2', 'font-bold'));
-            btn.classList.add('border-yellow-500', 'bg-yellow-500/10', 'border-2', 'font-bold');
-        }
-
-        document.getElementById('config-text').oninput = () => {
-            const raw = document.getElementById('config-text').value;
-            const lines = raw.split('\n').filter(l => l.trim().length > 0);
-            const container = document.getElementById('participant-chips');
-            const area = document.getElementById('participant-selection-area');
-            let temp = [];
-            for (let i = 0; i < lines.length; i += 2) { if (lines[i]) temp.push(lines[i].trim()); }
-            if (temp.length > 0) {
-                area.classList.remove('hidden');
-                container.innerHTML = temp.map(name => `<div class="participant-tag px-3 py-1 rounded-full border border-yellow-900 text-xs selected" onclick="this.classList.toggle('selected')">${name}</div>`).join('');
-            } else area.classList.add('hidden');
-        };
-
-        document.getElementById('start-game-btn').onclick = () => {
-            const raw = document.getElementById('config-text').value;
-            const lines = raw.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-            const chips = Array.from(document.querySelectorAll('.participant-tag.selected')).map(c => c.textContent.trim());
-            players = [];
-            for (let i = 0; i < lines.length; i += 2) {
-                if (lines[i] && lines[i+1]) {
-                    players.push({
-                        id: players.length, nombre: lines[i],
-                        facts: lines[i+1].split(/[.!?]/).map(f => f.trim()).filter(f => f.length > 3),
-                        includeInBio: chips.includes(lines[i])
-                    });
-                }
-            }
-            if (players.length < 2) return;
-            players.forEach(p => scores[p.nombre] = 0);
-            document.getElementById('screen-config').classList.remove('active');
-            document.getElementById('screen-game').classList.add('active');
-            updateScoreboard(); drawWheel();
-        };
-
-        function drawWheel() {
-            const canvas = document.getElementById('wheel'), ctx = canvas.getContext('2d');
-            const w = canvas.width, center = w / 2, radius = center - 30, slice = (Math.PI * 2) / categories.length;
-            categories.forEach((cat, i) => {
-                ctx.beginPath(); ctx.fillStyle = cat.color; ctx.moveTo(center, center);
-                ctx.arc(center, center, radius, i * slice, (i + 1) * slice); ctx.fill();
-                ctx.save(); ctx.translate(center, center); ctx.rotate(i * slice + slice / 2);
-                ctx.fillStyle = "white"; ctx.font = "900 36px Cinzel"; ctx.textAlign = "right";
-                ctx.fillText(cat.name.toUpperCase(), radius - 40, 12); ctx.restore();
-            });
-        }
-
-        document.getElementById('spin-btn').onclick = () => {
-            if (isSpinning) return;
-            isSpinning = true;
-            const canvas = document.getElementById('wheel');
-            const rotation = 3600 + Math.random() * 360;
-            canvas.style.transform = `rotate(${rotation}deg)`;
-            let ticks = 0;
-            const tInt = setInterval(() => { if(ticks++ < 40) playTone(800+Math.random()*200, 0.05, 'square', 0.02); else clearInterval(tInt); }, 120);
-            setTimeout(() => {
-                isSpinning = false;
-                const deg = rotation % 360;
-                const idx = Math.floor(((360 - deg + 270) % 360) / (360 / categories.length)) % categories.length;
-                showChallenge(categories[idx]);
-            }, 5000);
-        };
-
-        async function showChallenge(cat) {
-            document.getElementById('wheel-view').classList.add('hidden');
-            document.getElementById('challenge-view').classList.remove('hidden');
-            document.getElementById('feedback-area').classList.add('hidden');
-            document.getElementById('options-grid').innerHTML = "";
-            document.getElementById('ai-image-container').classList.add('hidden');
-            document.getElementById('cat-label').textContent = cat.name;
-
-            if (cat.id === "letras" || cat.id === "logica") {
-                const pool = questions[cat.id][selectedDifficulty] || questions[cat.id].senior;
-                const q = pool[Math.floor(Math.random() * pool.length)];
-                document.getElementById('question-text').textContent = q.q;
-                q.a.forEach((t, i) => renderBtn(t, i === q.c));
-            } else {
-                const target = players[Math.floor(Math.random() * players.length)];
-                document.getElementById('question-text').textContent = "¿Quién es " + target.facts[0] + "?";
-                players.forEach(p => renderBtn(p.nombre, p.id === target.id));
-            }
-            startTimer();
-        }
-
-        function renderBtn(text, isCorrect) {
-            const btn = document.createElement('button');
-            btn.className = "btn-answer"; btn.textContent = text;
-            btn.onclick = () => resolve(isCorrect);
-            document.getElementById('options-grid').appendChild(btn);
-        }
-
-        function startTimer() {
-            let left = 20; const display = document.getElementById('timer-display');
-            display.textContent = left; clearInterval(timerId);
-            timerId = setInterval(() => { if(--left <= 0) resolve(false); display.textContent = left; }, 1000);
-        }
-
-        function resolve(correct) {
-            clearInterval(timerId);
-            document.querySelectorAll('.btn-answer').forEach(b => b.disabled = true);
-            const feedback = document.getElementById('feedback-area');
-            feedback.classList.remove('hidden');
-            if (correct) {
-                playTone(523, 0.2); playTone(659, 0.4);
-                document.getElementById('feedback-msg').textContent = "¡CORRECTO!";
-                document.getElementById('feedback-msg').style.color = "#fbbf24";
-                scores[players[currentIdx].nombre] += 10;
-            } else {
-                playTone(150, 0.5, 'sawtooth');
-                document.getElementById('feedback-msg').textContent = "¡FALLO!";
-                document.getElementById('feedback-msg').style.color = "#ef4444";
-            }
-            updateScoreboard();
-        }
-
-        function updateScoreboard() {
-            document.getElementById('scoreboard').innerHTML = players.map((p, i) => `
-                <div class="flex justify-between items-center p-3 rounded-2xl ${i === currentIdx ? 'bg-yellow-500/20 border border-yellow-500' : 'bg-white/5'}">
-                    <span class="font-bold truncate">${p.nombre}</span>
-                    <span class="bg-yellow-600 px-3 py-1 rounded-lg text-xs font-black">${scores[p.nombre]}</span>
-                </div>
-            `).join('');
-            document.getElementById('active-player-name').textContent = players[currentIdx].nombre;
-        }
-
-        document.getElementById('next-btn').onclick = () => {
-            currentIdx = (currentIdx + 1) % players.length;
-            document.getElementById('challenge-view').classList.add('hidden');
-            document.getElementById('wheel-view').classList.remove('hidden');
-        };
-
-        document.getElementById('end-game-btn').onclick = () => {
-            document.getElementById('screen-game').classList.remove('active');
-            document.getElementById('screen-podium').classList.add('active');
-            const sorted = Object.entries(scores).sort((a,b) => b[1] - a[1]);
-            document.getElementById('podium-list').innerHTML = sorted.map(([name, score], i) => `
-                <div class="flex justify-between p-4 bg-white/5 rounded-xl">
-                    <span class="font-black">${i+1}º ${name}</span>
-                    <span class="text-yellow-400">${score} pts</span>
-                </div>
-            `).join('');
-        };
-
-        window.onload = () => {
-            generateAppIcon();
-            initSnow();
-            drawSnow();
-        };
-    </script>
-</body>
+  <body>
+    <div class="star-bg"></div>
+    <div id="root"></div>
+  </body>
 </html>
