@@ -4,6 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>La Ruleta Mágica de Reyes</title>
+    
+    <!-- Metatags para Dispositivos Móviles (PWA-like) -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Ruleta Reyes">
+    <link id="favicon" rel="icon" type="image/png" href="">
+    <link id="apple-touch-icon" rel="apple-touch-icon" href="">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Poppins:wght@300;400;600&display=swap');
@@ -21,6 +29,7 @@
             min-height: 100vh;
             margin: 0;
             overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .serif-royal { font-family: 'Cinzel', serif; }
@@ -102,7 +111,6 @@
             font-size: 1.5rem;
             transition: transform 0.2s;
         }
-        #music-toggle:active { transform: scale(0.9); }
 
         .loader {
             border: 4px solid rgba(251, 191, 36, 0.1);
@@ -117,6 +125,9 @@
 <body>
 
     <canvas id="snow"></canvas>
+
+    <!-- Icon Generator (Hidden) -->
+    <canvas id="icon-gen" width="180" height="180" style="display:none;"></canvas>
 
     <div id="music-toggle" onclick="toggleMusic()">
         <span id="music-icon">🔇</span>
@@ -143,7 +154,6 @@
 
                 <div>
                     <label class="block text-xs font-black uppercase text-yellow-500/70 mb-2">Libro de los Participantes</label>
-                    <p class="text-[10px] text-slate-400 mb-2">Escribe el nombre y una curiosidad debajo.</p>
                     <textarea id="config-text" class="w-full h-32 bg-slate-900 border border-yellow-900 p-4 rounded-xl text-white font-mono text-xs focus:border-yellow-500 outline-none" 
 placeholder="Melchor
 Le encanta el oro. Viaja siempre en camello.
@@ -169,7 +179,7 @@ Es experto en astronomía. Prefiere el incienso."></textarea>
             <main class="flex flex-col items-center space-y-6">
                 <div class="flex justify-between w-full items-center bg-black/20 p-4 rounded-2xl border border-yellow-500/20">
                     <h2 class="serif-royal text-2xl text-yellow-500">La Ruleta Mágica</h2>
-                    <button id="end-game-btn" class="bg-red-900/40 hover:bg-red-700 text-red-200 px-4 py-2 rounded-lg text-xs font-bold transition-all border border-red-500/30">TERMINAR FESTEJO</button>
+                    <button id="end-game-btn" class="bg-red-900/40 hover:bg-red-700 text-red-200 px-4 py-2 rounded-lg text-xs font-bold transition-all border border-red-500/30">TERMINAR</button>
                 </div>
 
                 <div id="wheel-view" class="w-full flex flex-col items-center space-y-8">
@@ -182,7 +192,6 @@ Es experto en astronomía. Prefiere el incienso."></textarea>
                     </button>
                 </div>
 
-                <!-- VISTA DE DESAFÍO -->
                 <div id="challenge-view" class="glass-card w-full hidden max-w-2xl">
                     <div class="flex justify-between items-center mb-6">
                         <span id="cat-label" class="text-xs font-black uppercase tracking-widest px-4 py-1 rounded-full border border-yellow-500/40 text-yellow-500"></span>
@@ -192,32 +201,28 @@ Es experto en astronomía. Prefiere el incienso."></textarea>
                     <div id="ai-image-container" class="hidden mb-6 flex flex-col items-center">
                         <div id="ai-loader" class="flex flex-col items-center p-8 space-y-4">
                             <div class="loader"></div>
-                            <p class="text-xs text-yellow-500 animate-pulse italic">Invocando visiones reales...</p>
+                            <p class="text-xs text-yellow-500 animate-pulse italic">Invocando visiones...</p>
                         </div>
-                        <img id="ai-img" class="hidden w-72 h-72 rounded-3xl object-cover shadow-2xl border-4 border-yellow-500/50" src="" alt="Enigma Real">
+                        <img id="ai-img" class="hidden w-72 h-72 rounded-3xl object-cover shadow-2xl border-4 border-yellow-500/50" src="" alt="Enigma">
                     </div>
 
                     <h3 id="question-text" class="text-2xl font-bold mb-8 text-center leading-relaxed"></h3>
                     <div id="options-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
 
                     <div id="feedback-area" class="hidden mt-10 text-center">
-                        <p id="feedback-msg" class="serif-royal text-4xl font-bold mb-2"></p>
-                        <p id="correct-ans-text" class="text-yellow-400 text-base mb-8 italic"></p>
+                        <p id="feedback-msg" class="serif-royal text-4xl font-bold mb-8"></p>
                         <button id="next-btn" class="bg-yellow-500 text-slate-900 font-black px-12 py-4 rounded-2xl shadow-xl hover:bg-yellow-400">SIGUIENTE TURNO</button>
                     </div>
                 </div>
             </main>
 
-            <!-- LATERAL -->
+            <!-- SCOREBOARD -->
             <aside class="glass-card h-fit space-y-6 !border-yellow-900/50">
-                <h3 class="serif-royal text-2xl text-yellow-500 border-b border-yellow-500/20 pb-4 text-center">Ofrendas (Puntos)</h3>
+                <h3 class="serif-royal text-2xl text-yellow-500 border-b border-yellow-500/20 pb-4 text-center">Ofrendas</h3>
                 <div id="scoreboard" class="space-y-3"></div>
-                <div class="pt-6 mt-4 border-t border-yellow-500/20">
-                    <p class="text-[10px] uppercase text-slate-500 font-black mb-1">Bajo la estrella:</p>
-                    <div class="flex items-center gap-2">
-                        <span>✨</span>
-                        <p id="active-player-name" class="text-xl font-bold text-yellow-200 truncate">---</p>
-                    </div>
+                <div class="pt-6 mt-4 border-t border-yellow-500/20 text-center">
+                    <p class="text-[10px] uppercase text-slate-500 font-black mb-1">Turno de:</p>
+                    <p id="active-player-name" class="text-xl font-bold text-yellow-200 truncate">---</p>
                 </div>
             </aside>
         </div>
@@ -235,12 +240,41 @@ Es experto en astronomía. Prefiere el incienso."></textarea>
     <script>
         const apiKey = "";
         
-        // --- MOTOR DE AUDIO AVANZADO ---
+        // --- GENERADOR DE FAVICON E ICONO APPLE ---
+        function generateAppIcon() {
+            const canvas = document.getElementById('icon-gen');
+            const ctx = canvas.getContext('2d');
+            
+            // Fondo real
+            const gradient = ctx.createRadialGradient(90, 90, 0, 90, 90, 120);
+            gradient.addColorStop(0, '#1e293b');
+            gradient.addColorStop(1, '#070a13');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 180, 180);
+
+            // Borde dorado
+            ctx.strokeStyle = '#fbbf24';
+            ctx.lineWidth = 8;
+            ctx.strokeRect(4, 4, 172, 172);
+
+            // Corona
+            ctx.font = '100px serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = '#fbbf24';
+            ctx.fillText('👑', 90, 95);
+
+            const dataUrl = canvas.toDataURL('image/png');
+            document.getElementById('favicon').href = dataUrl;
+            document.getElementById('apple-touch-icon').href = dataUrl;
+        }
+
+        // --- AUDIO ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         let isMusicPlaying = false;
         let melodyTimeout;
 
-        // Versión extendida de We Wish You A Merry Christmas
         const melody = [
             {f: 261, d: 0.4}, {f: 349, d: 0.4}, {f: 349, d: 0.2}, {f: 392, d: 0.2}, {f: 349, d: 0.2}, {f: 329, d: 0.2}, {f: 293, d: 0.4}, {f: 293, d: 0.4},
             {f: 293, d: 0.4}, {f: 392, d: 0.4}, {f: 392, d: 0.2}, {f: 440, d: 0.2}, {f: 392, d: 0.2}, {f: 349, d: 0.2}, {f: 329, d: 0.4}, {f: 261, d: 0.4},
@@ -263,32 +297,8 @@ Es experto en astronomía. Prefiere el incienso."></textarea>
             if (!isMusicPlaying) return;
             const note = melody[step % melody.length];
             playTone(note.f, note.d * 2, 'triangle', 0.05);
-            // Bajo acompañante
             if (step % 4 === 0) playTone(note.f / 2, note.d * 4, 'sine', 0.03);
-            
             melodyTimeout = setTimeout(() => playMelodyStep(step + 1), note.d * 1000);
-        }
-
-        function playSpinTick() {
-            playTone(800 + Math.random() * 200, 0.05, 'square', 0.02);
-        }
-
-        function playSuccess() {
-            const now = audioCtx.currentTime;
-            [523.25, 659.25, 783.99, 1046.50].forEach((f, i) => {
-                const osc = audioCtx.createOscillator();
-                const g = audioCtx.createGain();
-                osc.frequency.setValueAtTime(f, now + i * 0.1);
-                g.gain.setValueAtTime(0.1, now + i * 0.1);
-                g.gain.exponentialRampToValueAtTime(0.001, now + i * 0.1 + 0.5);
-                osc.connect(g); g.connect(audioCtx.destination);
-                osc.start(now + i * 0.1); osc.stop(now + i * 0.1 + 0.5);
-            });
-        }
-
-        function playError() {
-            playTone(150, 0.5, 'sawtooth', 0.1);
-            playTone(110, 0.7, 'sawtooth', 0.1);
         }
 
         function toggleMusic() {
@@ -303,18 +313,15 @@ Es experto en astronomía. Prefiere el incienso."></textarea>
         const snowCanvas = document.getElementById('snow');
         const sctx = snowCanvas.getContext('2d');
         let flakes = [];
-
         function initSnow() {
             snowCanvas.width = window.innerWidth;
             snowCanvas.height = window.innerHeight;
-            flakes = Array.from({length: 100}, () => ({
+            flakes = Array.from({length: 80}, () => ({
                 x: Math.random() * snowCanvas.width,
                 y: Math.random() * snowCanvas.height,
-                r: Math.random() * 3 + 1,
-                d: Math.random() * 1
+                r: Math.random() * 3 + 1, d: Math.random() * 1
             }));
         }
-
         function drawSnow() {
             sctx.clearRect(0, 0, snowCanvas.width, snowCanvas.height);
             sctx.fillStyle = "white";
@@ -322,46 +329,24 @@ Es experto en astronomía. Prefiere el incienso."></textarea>
             flakes.forEach(f => {
                 sctx.moveTo(f.x, f.y);
                 sctx.arc(f.x, f.y, f.r, 0, Math.PI*2);
-                f.y += Math.cos(f.d) + 1 + f.r/2;
-                f.x += Math.sin(f.d) * 2;
+                f.y += 1 + f.r/2;
                 if(f.y > snowCanvas.height) f.y = -10, f.x = Math.random()*snowCanvas.width;
             });
             sctx.fill();
             requestAnimationFrame(drawSnow);
         }
-        window.addEventListener('resize', initSnow);
-        initSnow(); drawSnow();
 
         // --- PREGUNTAS ---
         const questions = {
             letras: {
-                junior: [
-                    { q: "¿Qué animal utilizan los Reyes Magos para viajar?", a: ["Camello", "Caballo", "Elefante", "Reno"], c: 0 },
-                    { q: "¿Cómo se llama el roscón típico de este día?", a: ["Roscón de Reyes", "Panettone", "Turrón", "Mazapán"], c: 0 },
-                    { q: "¿Qué le dejan los niños a los camellos?", a: ["Agua y paja", "Leche y galletas", "Caramelos", "Nada"], c: 0 }
-                ],
-                senior: [
-                    { q: "¿Qué ciudad es el destino final de los Reyes Magos?", a: ["Belén", "Nazaret", "Jerusalén", "Egipto"], c: 0 },
-                    { q: "¿Qué regalo entregó Gaspar?", a: ["Incienso", "Oro", "Mirra", "Diamantes"], c: 0 },
-                    { q: "¿Qué significa 'Epifanía'?", a: ["Manifestación", "Regalo", "Estrella", "Nacimiento"], c: 0 }
-                ],
-                master: [
-                    { q: "¿Qué rey entregó la Mirra?", a: ["Baltasar", "Melchor", "Gaspar", "Herodes"], c: 0 },
-                    { q: "¿En qué catedral se dice que descansan sus reliquias?", a: ["Colonia", "Roma", "París", "Santiago"], c: 0 }
-                ]
+                junior: [{ q: "¿Qué animal utilizan los Reyes?", a: ["Camello", "Caballo", "Elefante", "Reno"], c: 0 }],
+                senior: [{ q: "¿Qué regalo entregó Gaspar?", a: ["Incienso", "Oro", "Mirra", "Diamantes"], c: 0 }],
+                master: [{ q: "¿Qué rey entregó la Mirra?", a: ["Baltasar", "Melchor", "Gaspar", "Herodes"], c: 0 }]
             },
             logica: {
-                junior: [
-                    { q: "Si Melchor tiene 3 pajes y Gaspar 2, ¿cuántos pajes hay?", a: ["5", "6", "4", "3"], c: 0 },
-                    { q: "¿Qué pesa más, 1kg de oro o 1kg de incienso?", a: ["Igual", "Oro", "Incienso", "Mirra"], c: 0 }
-                ],
-                senior: [
-                    { q: "¿Cuántas patas tienen los 3 camellos de los Reyes?", a: ["12", "15", "9", "18"], c: 0 },
-                    { q: "Si sigues una estrella al Norte, ¿qué mano te queda al Este?", a: ["Derecha", "Izquierda", "Atrás", "Delante"], c: 0 }
-                ],
-                master: [
-                    { q: "Si hay 3 reyes y cada uno da 3 regalos a 3 niños, ¿cuántos regalos hay?", a: ["27", "9", "18", "12"], c: 0 }
-                ]
+                junior: [{ q: "Si Melchor tiene 3 pajes y Gaspar 2, ¿cuántos hay?", a: ["5", "6", "4", "3"], c: 0 }],
+                senior: [{ q: "¿Cuántas patas tienen los 3 camellos?", a: ["12", "15", "9", "18"], c: 0 }],
+                master: [{ q: "3 reyes dan 3 regalos a 3 niños, ¿total?", a: ["27", "9", "18", "12"], c: 0 }]
             }
         };
 
@@ -380,27 +365,25 @@ Es experto en astronomía. Prefiere el incienso."></textarea>
             { id: "enigmaia", name: "Visión Real", color: "#b45309" }
         ];
 
-        // --- LOGICA DEL JUEGO ---
+        // --- LOGICA ---
         function setDifficulty(val, btn) {
             selectedDifficulty = val;
             document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('border-yellow-500', 'bg-yellow-500/10', 'border-2', 'font-bold'));
             btn.classList.add('border-yellow-500', 'bg-yellow-500/10', 'border-2', 'font-bold');
         }
 
-        document.getElementById('config-text').oninput = updateParticipantSelection;
-
-        function updateParticipantSelection() {
+        document.getElementById('config-text').oninput = () => {
             const raw = document.getElementById('config-text').value;
             const lines = raw.split('\n').filter(l => l.trim().length > 0);
             const container = document.getElementById('participant-chips');
             const area = document.getElementById('participant-selection-area');
-            let tempPlayers = [];
-            for (let i = 0; i < lines.length; i += 2) { if (lines[i]) tempPlayers.push(lines[i].trim()); }
-            if (tempPlayers.length > 0) {
+            let temp = [];
+            for (let i = 0; i < lines.length; i += 2) { if (lines[i]) temp.push(lines[i].trim()); }
+            if (temp.length > 0) {
                 area.classList.remove('hidden');
-                container.innerHTML = tempPlayers.map(name => `<div class="participant-tag px-3 py-1 rounded-full border border-yellow-900 text-xs selected" onclick="this.classList.toggle('selected')">${name}</div>`).join('');
+                container.innerHTML = temp.map(name => `<div class="participant-tag px-3 py-1 rounded-full border border-yellow-900 text-xs selected" onclick="this.classList.toggle('selected')">${name}</div>`).join('');
             } else area.classList.add('hidden');
-        }
+        };
 
         document.getElementById('start-game-btn').onclick = () => {
             const raw = document.getElementById('config-text').value;
@@ -410,14 +393,13 @@ Es experto en astronomía. Prefiere el incienso."></textarea>
             for (let i = 0; i < lines.length; i += 2) {
                 if (lines[i] && lines[i+1]) {
                     players.push({
-                        id: players.length,
-                        nombre: lines[i],
+                        id: players.length, nombre: lines[i],
                         facts: lines[i+1].split(/[.!?]/).map(f => f.trim()).filter(f => f.length > 3),
                         includeInBio: chips.includes(lines[i])
                     });
                 }
             }
-            if (players.length < 2) return alert("¡Introduce al menos a dos participantes!");
+            if (players.length < 2) return;
             players.forEach(p => scores[p.nombre] = 0);
             document.getElementById('screen-config').classList.remove('active');
             document.getElementById('screen-game').classList.add('active');
@@ -427,13 +409,11 @@ Es experto en astronomía. Prefiere el incienso."></textarea>
         function drawWheel() {
             const canvas = document.getElementById('wheel'), ctx = canvas.getContext('2d');
             const w = canvas.width, center = w / 2, radius = center - 30, slice = (Math.PI * 2) / categories.length;
-            ctx.clearRect(0,0,w,w);
             categories.forEach((cat, i) => {
                 ctx.beginPath(); ctx.fillStyle = cat.color; ctx.moveTo(center, center);
                 ctx.arc(center, center, radius, i * slice, (i + 1) * slice); ctx.fill();
                 ctx.save(); ctx.translate(center, center); ctx.rotate(i * slice + slice / 2);
                 ctx.fillStyle = "white"; ctx.font = "900 36px Cinzel"; ctx.textAlign = "right";
-                ctx.shadowBlur = 10; ctx.shadowColor = "black";
                 ctx.fillText(cat.name.toUpperCase(), radius - 40, 12); ctx.restore();
             });
         }
@@ -444,16 +424,8 @@ Es experto en astronomía. Prefiere el incienso."></textarea>
             const canvas = document.getElementById('wheel');
             const rotation = 3600 + Math.random() * 360;
             canvas.style.transform = `rotate(${rotation}deg)`;
-
-            // Sonido de giro rítmico
             let ticks = 0;
-            const totalTicks = 40;
-            const tickInterval = setInterval(() => {
-                if (ticks >= totalTicks) clearInterval(tickInterval);
-                playSpinTick();
-                ticks++;
-            }, 120);
-
+            const tInt = setInterval(() => { if(ticks++ < 40) playTone(800+Math.random()*200, 0.05, 'square', 0.02); else clearInterval(tInt); }, 120);
             setTimeout(() => {
                 isSpinning = false;
                 const deg = rotation % 360;
@@ -471,48 +443,16 @@ Es experto en astronomía. Prefiere el incienso."></textarea>
             document.getElementById('cat-label').textContent = cat.name;
 
             if (cat.id === "letras" || cat.id === "logica") {
-                const pool = questions[cat.id][selectedDifficulty];
+                const pool = questions[cat.id][selectedDifficulty] || questions[cat.id].senior;
                 const q = pool[Math.floor(Math.random() * pool.length)];
                 document.getElementById('question-text').textContent = q.q;
                 q.a.forEach((t, i) => renderBtn(t, i === q.c));
-            } else if (cat.id === "biografia") {
-                const bio = getBioChallenge();
-                document.getElementById('question-text').textContent = bio.text;
-                players.forEach(p => renderBtn(p.nombre, p.id === bio.playerId));
-            } else if (cat.id === "enigmaia") {
-                document.getElementById('ai-image-container').classList.remove('hidden');
-                document.getElementById('ai-loader').classList.remove('hidden');
-                document.getElementById('ai-img').classList.add('hidden');
-                document.getElementById('question-text').textContent = "Consultando a las estrellas...";
-                const target = players.filter(p => p.includeInBio)[Math.floor(Math.random() * players.length)] || players[0];
-                try {
-                    const imgUrl = await generateAIImage(`Majestic oil painting of a king's golden gift representing: ${target.facts[0]}. Christmas stars background.`);
-                    document.getElementById('ai-loader').classList.add('hidden');
-                    document.getElementById('ai-img').src = imgUrl;
-                    document.getElementById('ai-img').classList.remove('hidden');
-                    document.getElementById('question-text').textContent = "¿De quién es esta ofrenda?";
-                    players.forEach(p => renderBtn(p.nombre, p.id === target.id));
-                } catch (e) {
-                    document.getElementById('question-text').textContent = "¿Quién destaca por: " + target.facts[0] + "?";
-                    players.forEach(p => renderBtn(p.nombre, p.id === target.id));
-                }
+            } else {
+                const target = players[Math.floor(Math.random() * players.length)];
+                document.getElementById('question-text').textContent = "¿Quién es " + target.facts[0] + "?";
+                players.forEach(p => renderBtn(p.nombre, p.id === target.id));
             }
             startTimer();
-        }
-
-        async function generateAIImage(prompt) {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${apiKey}`;
-            const response = await fetch(url, { method: 'POST', body: JSON.stringify({ instances: { prompt }, parameters: { sampleCount: 1 } }) });
-            const result = await response.json();
-            return `data:image/png;base64,${result.predictions[0].bytesBase64Encoded}`;
-        }
-
-        function getBioChallenge() {
-            let bioPool = [];
-            players.forEach(p => { if (p.includeInBio) p.facts.forEach(f => bioPool.push({ p, f })); });
-            if (bioPool.length === 0) return { text: "¿Quién es " + players[0].nombre + "?", playerId: 0 };
-            const chosen = bioPool[Math.floor(Math.random() * bioPool.length)];
-            return { text: `¿A qué sabio define: "${chosen.f}"?`, playerId: chosen.p.id };
         }
 
         function renderBtn(text, isCorrect) {
@@ -525,7 +465,7 @@ Es experto en astronomía. Prefiere el incienso."></textarea>
         function startTimer() {
             let left = 20; const display = document.getElementById('timer-display');
             display.textContent = left; clearInterval(timerId);
-            timerId = setInterval(() => { left--; display.textContent = left; if (left <= 0) resolve(false); }, 1000);
+            timerId = setInterval(() => { if(--left <= 0) resolve(false); display.textContent = left; }, 1000);
         }
 
         function resolve(correct) {
@@ -534,14 +474,14 @@ Es experto en astronomía. Prefiere el incienso."></textarea>
             const feedback = document.getElementById('feedback-area');
             feedback.classList.remove('hidden');
             if (correct) {
-                playSuccess();
-                document.getElementById('feedback-msg').textContent = "¡GLORIA REAL!";
-                document.getElementById('feedback-msg').className = "serif-royal text-4xl font-bold text-yellow-400";
+                playTone(523, 0.2); playTone(659, 0.4);
+                document.getElementById('feedback-msg').textContent = "¡CORRECTO!";
+                document.getElementById('feedback-msg').style.color = "#fbbf24";
                 scores[players[currentIdx].nombre] += 10;
             } else {
-                playError();
-                document.getElementById('feedback-msg').textContent = "¡CARBONCILLO!";
-                document.getElementById('feedback-msg').className = "serif-royal text-4xl font-bold text-red-500";
+                playTone(150, 0.5, 'sawtooth');
+                document.getElementById('feedback-msg').textContent = "¡FALLO!";
+                document.getElementById('feedback-msg').style.color = "#ef4444";
             }
             updateScoreboard();
         }
@@ -550,7 +490,7 @@ Es experto en astronomía. Prefiere el incienso."></textarea>
             document.getElementById('scoreboard').innerHTML = players.map((p, i) => `
                 <div class="flex justify-between items-center p-3 rounded-2xl ${i === currentIdx ? 'bg-yellow-500/20 border border-yellow-500' : 'bg-white/5'}">
                     <span class="font-bold truncate">${p.nombre}</span>
-                    <span class="bg-yellow-600 px-3 py-1 rounded-lg text-xs font-black text-slate-900">${scores[p.nombre]}</span>
+                    <span class="bg-yellow-600 px-3 py-1 rounded-lg text-xs font-black">${scores[p.nombre]}</span>
                 </div>
             `).join('');
             document.getElementById('active-player-name').textContent = players[currentIdx].nombre;
@@ -560,7 +500,6 @@ Es experto en astronomía. Prefiere el incienso."></textarea>
             currentIdx = (currentIdx + 1) % players.length;
             document.getElementById('challenge-view').classList.add('hidden');
             document.getElementById('wheel-view').classList.remove('hidden');
-            document.getElementById('wheel').style.transform = "rotate(0deg)";
         };
 
         document.getElementById('end-game-btn').onclick = () => {
@@ -568,11 +507,17 @@ Es experto en astronomía. Prefiere el incienso."></textarea>
             document.getElementById('screen-podium').classList.add('active');
             const sorted = Object.entries(scores).sort((a,b) => b[1] - a[1]);
             document.getElementById('podium-list').innerHTML = sorted.map(([name, score], i) => `
-                <div class="flex justify-between p-4 bg-white/5 rounded-xl border border-yellow-500/30 ${i===0?'scale-110 border-yellow-500 bg-yellow-500/10 shadow-lg':''}">
-                    <span class="font-black text-xl">${i+1}º ${name}</span>
-                    <span class="text-yellow-400 font-mono">${score} pts</span>
+                <div class="flex justify-between p-4 bg-white/5 rounded-xl">
+                    <span class="font-black">${i+1}º ${name}</span>
+                    <span class="text-yellow-400">${score} pts</span>
                 </div>
             `).join('');
+        };
+
+        window.onload = () => {
+            generateAppIcon();
+            initSnow();
+            drawSnow();
         };
     </script>
 </body>
